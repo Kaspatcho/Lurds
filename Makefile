@@ -6,9 +6,12 @@ LDLIBS := -lcmocka
 
 BUILD_DIR := build
 APP := $(BUILD_DIR)/gerenciador_processos
-APP_OBJECTS := $(BUILD_DIR)/src/main.o $(BUILD_DIR)/src/example.o
-UNIT_TEST := $(BUILD_DIR)/tests/unit/test_example
-FEATURE_TEST := $(BUILD_DIR)/tests/feature/test_fixture
+MAIN_OBJECT := $(BUILD_DIR)/src/main.o
+LIBRARY_SOURCES := $(filter-out src/main.c,$(wildcard src/*.c))
+LIBRARY_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(LIBRARY_SOURCES))
+APP_OBJECTS := $(MAIN_OBJECT) $(LIBRARY_OBJECTS)
+TEST_SOURCES := $(wildcard tests/unit/test_*.c tests/feature/test_*.c)
+TEST_BINS := $(patsubst %.c,$(BUILD_DIR)/%,$(TEST_SOURCES))
 
 .PHONY: build run test clean
 
@@ -17,9 +20,11 @@ build: $(APP)
 run: $(APP)
 	./$(APP)
 
-test: $(UNIT_TEST) $(FEATURE_TEST)
-	./$(UNIT_TEST)
-	./$(FEATURE_TEST)
+test: $(TEST_BINS)
+	@for test_binary in $(TEST_BINS); do \
+		echo "Running $$test_binary"; \
+		./$$test_binary || exit $$?; \
+	done
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -28,14 +33,10 @@ $(APP): $(APP_OBJECTS)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(UNIT_TEST): tests/unit/test_example.c $(BUILD_DIR)/src/example.o include/example.h
+$(BUILD_DIR)/tests/%: tests/%.c $(LIBRARY_OBJECTS)
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(BUILD_DIR)/src/example.o -o $@ $(LDLIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(LIBRARY_OBJECTS) -o $@ $(LDLIBS)
 
-$(FEATURE_TEST): tests/feature/test_fixture.c
-	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(LDLIBS)
-
-$(BUILD_DIR)/%.o: %.c include/example.h
+$(BUILD_DIR)/src/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
