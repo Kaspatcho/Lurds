@@ -59,3 +59,7 @@ tests/feature/    Teste de feature com cmocka
 tests/fixtures/   Arquivos controlados usados pelos testes
 build/            Artefatos gerados pelo Makefile (não versionados)
 ```
+
+## Testes
+**IMPORTANTE:** Não esqueça de adicionar novos testes e, principalmente, **NÃO ESQUEÇA DE RODAR OS TESTES ANTES DE SUBIR ALGO**.
+Testes são importantes para garantir que o código novo não quebra o código antigo.
