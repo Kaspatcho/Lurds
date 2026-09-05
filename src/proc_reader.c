@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include "proc_reader.h"
-#include "flags.h"
+#include "app_env.h"
 
 ProcList* _make_list(char *pid) {
     ProcList *dir = (ProcList*) malloc(sizeof(ProcList));
@@ -39,24 +39,6 @@ ProcList* _get_proc_list(char *path) {
 }
 
 ProcList* get_proc_list() {
-    char *path = TESTING ? "./tests/fixtures/proc" : "/proc";
+    char *path = PROC_PATH;
     return _get_proc_list(path);
 }
-
-// - read status
-// - read stat
-// - read cmdline
-// char* read_files(char *pid)
-// {
-//     FILE *fixture;
-//     char content[64] = {0};
-//     size_t bytes_read;
-
-//     fixture = fopen("tests/fixtures/example.txt", "r");
-//     assert_non_null(fixture);
-
-//     bytes_read = fread(content, 1, sizeof(content) - 1, fixture);
-//     assert_int_equal(fclose(fixture), 0);
-//     assert_int_equal(bytes_read, 25);
-//     assert_string_equal(content, "Fixture example content.\n");
-// }

@@ -6,10 +6,14 @@ LDLIBS := -lcmocka
 
 BUILD_DIR := build
 APP := $(BUILD_DIR)/gerenciador_processos
-MAIN_OBJECT := $(BUILD_DIR)/src/main.o
+APP_CPPFLAGS := $(CPPFLAGS) -DIS_TESTING=0
+TEST_CPPFLAGS := $(CPPFLAGS) -DIS_TESTING=1
+HEADERS := $(wildcard include/*.h)
+MAIN_OBJECT := $(BUILD_DIR)/app/src/main.o
 LIBRARY_SOURCES := $(filter-out src/main.c,$(wildcard src/*.c))
-LIBRARY_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(LIBRARY_SOURCES))
-APP_OBJECTS := $(MAIN_OBJECT) $(LIBRARY_OBJECTS)
+APP_LIBRARY_OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/app/src/%.o,$(LIBRARY_SOURCES))
+TEST_LIBRARY_OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/test/src/%.o,$(LIBRARY_SOURCES))
+APP_OBJECTS := $(MAIN_OBJECT) $(APP_LIBRARY_OBJECTS)
 TEST_SOURCES := $(wildcard tests/unit/test_*.c tests/feature/test_*.c)
 TEST_BINS := $(patsubst %.c,$(BUILD_DIR)/%,$(TEST_SOURCES))
 
@@ -33,10 +37,14 @@ $(APP): $(APP_OBJECTS)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(BUILD_DIR)/tests/%: tests/%.c $(LIBRARY_OBJECTS)
+$(BUILD_DIR)/tests/%: tests/%.c $(TEST_LIBRARY_OBJECTS)
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(LIBRARY_OBJECTS) -o $@ $(LDLIBS)
+	$(CC) $(TEST_CPPFLAGS) $(CFLAGS) $< $(TEST_LIBRARY_OBJECTS) -o $@ $(LDLIBS)
 
-$(BUILD_DIR)/src/%.o: src/%.c
+$(BUILD_DIR)/app/src/%.o: src/%.c $(HEADERS)
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(APP_CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/test/src/%.o: src/%.c $(HEADERS)
+	@mkdir -p $(@D)
+	$(CC) $(TEST_CPPFLAGS) $(CFLAGS) -c $< -o $@
