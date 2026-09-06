@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -24,7 +25,10 @@ static void test_list_is_redized(void **state)
     push_process(l, "41");
     push_process(l, "41");
     push_process(l, "41");
+
+    assert_int_equal(l->count, 5);
     assert_int_equal(l->capacity, 6);
+    assert_string_equal(l->items[0]->pid, "41");
 }
 
 static void test_list_is_destroyed(void **state)

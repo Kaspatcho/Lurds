@@ -13,7 +13,14 @@ ProcList* create_list()
     ProcList *list = (ProcList*) malloc(sizeof(ProcList));
     list->count = 0;
     list->capacity = INITIAL_CAPACITY;
-    list->items = malloc(sizeof(Process) * list->capacity);
+
+    // aloca so sizeof(*Process) ao inves de alocar o Process.
+    // aparentemente sizeof(Process) seria alocacao excessiva.
+    //
+    // tambem calloc e mais lento que malloc, entao deve ser usado somente na criacao
+    // malloc deixa lixo na memoria alocada, entao deve ser usado quando for ser
+    // imediatamente preenchido.
+    list->items = calloc(list->capacity, sizeof(*list->items));
 
     return list;
 }
@@ -32,8 +39,8 @@ void resize(ProcList *list)
 {
     int new_cap = list->capacity *1.5f;
 
-    Process** new_items = malloc(sizeof(Process) * new_cap);
-    memcpy(new_items, list->items, list->capacity);
+    Process** new_items = malloc(sizeof(*list->items) * new_cap);
+    memcpy(new_items, list->items, sizeof(*list->items) * list->capacity);
 
     free(list->items);
 
