@@ -132,6 +132,8 @@ para todos os arquivos ou `git add example.c` para um arquivo especifico
 para mostrar uma interface ou `git commit -m "Meu titulo do commit"` para adicionar direto.
 4. Subir commits salvos na nuvem (**TESTE ANTES**): `git push` (provavelmente vai te pedir pra conectar com o seu github)
 
+**Dica:** O VSCode tem integração com o github, então tem uma aba "source control" que facilita mexer no git sem digitar comandos.
+
 ## Lessons Learned
 Como o carioca deu a ideia, vou adicionar aqui o que eu aprendi durante o desenvolvimento:
 1. Aprendi que eu me sinto um homem das cavernas programando em C (não tem bosta nenhuma nessa linguagem)
