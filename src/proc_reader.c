@@ -1,21 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <string.h>
 #include "proc_reader.h"
 #include "app_env.h"
+#include "utils.h"
 
-ProcList* _make_list(char *pid) {
-    ProcList *dir = (ProcList*) malloc(sizeof(ProcList));
-    dir->pid = pid;
+const unsigned int INITIAL_CAPACITY = 4;
 
-    return dir;
+ProcList* create_list()
+{
+    ProcList *list = (ProcList*) malloc(sizeof(ProcList));
+    list->count = 0;
+    list->capacity = INITIAL_CAPACITY;
+    list->items = malloc(sizeof(Process) * list->capacity);
+
+    return list;
 }
 
-ProcList *_add_proc(ProcList* list, char *name) {
-    ProcList* node = _make_list(name);
-    node->next = list;
+void push_process(ProcList *list, char *pid)
+{
+    if(list->count == list->capacity) {
+        resize(list);
+    }
 
-    return node;
+    Process *p = create_process(pid);
+    list->items[list->count++] = p;
+}
+
+void resize(ProcList *list)
+{
+    int new_cap = list->capacity *1.5f;
+
+    Process** new_items = malloc(sizeof(Process) * new_cap);
+    memcpy(new_items, list->items, list->capacity);
+
+    free(list->items);
+
+    list->capacity = new_cap;
+    list->items = new_items;
+}
+
+void delete_list(ProcList **list)
+{
+    free((*list)->items);
+    free(*list);
+    *list = NULL;
 }
 
 ProcList* _get_proc_list(char *path) {
@@ -27,11 +57,17 @@ ProcList* _get_proc_list(char *path) {
         return NULL;
     }
 
-    ProcList *directory = _make_list(NULL);
+    ProcList *directory = create_list();
     struct dirent *dir;
 
     while ((dir = readdir(d)) != NULL) {
-        directory = _add_proc(directory, dir->d_name);
+        // pula diretorios "fake" do linux e os que nao sao processos
+        // (.. aponta pro diretorio pai e . aponta pro atual)
+        if(!is_numeric(dir->d_name)) {
+            continue;
+        }
+
+        push_process(directory, dir->d_name);
     }
 
     closedir(d);

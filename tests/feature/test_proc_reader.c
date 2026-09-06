@@ -7,26 +7,24 @@
 #include <cmocka.h>
 #include "proc_reader.h"
 
-static void test_fixture_has_expected_content(void **state)
+static void test_procs_are_listed(void **state)
 {
     (void) state;
 
-    ProcList* dir = get_proc_list(1);
-    for(ProcList *d = dir; d->next != NULL; d = d->next) {
-        // pula diretorios "fake" do linux
-        // (.. aponta pro diretorio pai e . aponta pro atual)
-        if(!strcmp(d->pid, "..") || !strcmp(d->pid, ".")) {
-            continue;
-        }
+    ProcList* dir = get_proc_list();
+    get_proc_list();
+    assert_string_equal(dir->items[0]->pid, "41");
 
-        assert_string_equal(d->pid, "41");
+    for(size_t i = 0; i < dir->count; i++) {
+        Process *d = dir->items[i];
+        assert_non_null(d->pid);
     }
 }
 
 int main(void)
 {
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(test_fixture_has_expected_content),
+        cmocka_unit_test(test_procs_are_listed),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

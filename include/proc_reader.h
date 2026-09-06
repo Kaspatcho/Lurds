@@ -1,5 +1,6 @@
 #ifndef PROC_READER_H
 #define PROC_READER_H
+#include "proc_parser.h"
 
 /*
 # proc_reader
@@ -11,16 +12,18 @@
 - make dynamic vector of Process called ProcList
 */
 
-// simple linked list
+// simple dynamic vector
 typedef struct ProcList {
-    char *pid; // proc PID/name of the directory
-    struct ProcList *next;
+    size_t count;
+    size_t capacity;
+    Process** items; // array of process
 } ProcList;
 
 // list procs
-ProcList* _make_list(char *pid);
-ProcList *_add_proc(ProcList* list, char *pid);
-ProcList* _get_proc_list(char *path);
+ProcList* create_list();
+void push_process(ProcList *list, char *pid);
+void resize(ProcList *list);
+void delete_list(ProcList **list);
 ProcList* get_proc_list();
 
 #endif

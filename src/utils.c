@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "utils.h"
 
 char* join_path(char *basepath, char *path)
@@ -39,4 +40,14 @@ char* str_slice_until(char *string, size_t start, const char c)
     strncpy(n, ((char*) string) + start, length);
 
     return n;
+}
+
+int is_numeric(char *str)
+{
+    int i = 0;
+    while(str[i] != '\0') {
+        if(!isdigit(str[i++])) return 0;
+    }
+
+    return 1;
 }
