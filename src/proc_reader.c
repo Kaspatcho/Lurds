@@ -20,7 +20,7 @@ ProcList* create_list()
     // tambem calloc e mais lento que malloc, entao deve ser usado somente na criacao
     // malloc deixa lixo na memoria alocada, entao deve ser usado quando for ser
     // imediatamente preenchido.
-    list->items = calloc(list->capacity, sizeof(*list->items));
+    list->items = calloc(list->capacity, sizeof(Process*));
 
     return list;
 }
@@ -39,8 +39,8 @@ void resize(ProcList *list)
 {
     int new_cap = list->capacity *1.5f;
 
-    Process** new_items = malloc(sizeof(*list->items) * new_cap);
-    memcpy(new_items, list->items, sizeof(*list->items) * list->capacity);
+    Process** new_items = malloc(sizeof(Process*) * new_cap);
+    memcpy(new_items, list->items, sizeof(Process*) * list->capacity);
 
     free(list->items);
 
@@ -74,7 +74,11 @@ ProcList* _get_proc_list(char *path) {
             continue;
         }
 
-        push_process(directory, dir->d_name);
+        // precisa alocar em outro lugar, pq dir->d_name possivelmente
+        // vai ser destruido sem eu saber.
+        char *pid = calloc(strlen(dir->d_name) + 1, sizeof(char));
+        strcpy(pid, dir->d_name);
+        push_process(directory, pid);
     }
 
     closedir(d);

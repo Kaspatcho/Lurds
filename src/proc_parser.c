@@ -16,6 +16,13 @@ Process* create_process(char *pid)
 {
     Process *p = (Process*) malloc(sizeof(Process));
     p->pid = pid;
+    p->name = NULL;
+    p->ppid = NULL;
+    p->uid = NULL;
+    p->state = NULL;
+    p->vmrss = NULL;
+    p->active_time = 0;
+    p->start_time = 0;
 
     read_status(p);
     read_cmdline(p);
@@ -101,7 +108,7 @@ int read_cmdline(Process *p)
 
     command[last + 1] = '\0';
 
-    p->name = calloc(last, sizeof(char));
+    p->name = calloc(last + 1, sizeof(char));
     strncpy(p->name, command, last + 1);
 
     fclose(file);
