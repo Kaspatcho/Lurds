@@ -12,7 +12,6 @@ static void test_procs_are_listed(void **state)
     (void) state;
 
     ProcList* dir = get_proc_list();
-    get_proc_list();
     assert_string_equal(dir->items[0]->pid, "41");
 
     for(size_t i = 0; i < dir->count; i++) {
