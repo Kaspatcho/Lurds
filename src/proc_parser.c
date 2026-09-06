@@ -18,6 +18,7 @@ Process* create_process(char *pid)
     p->pid = pid;
 
     read_status(p);
+    read_cmdline(p);
     return p;
 }
 
@@ -39,13 +40,9 @@ int read_status(Process *p)
     while (fgets(line, sizeof(line), file) != NULL) {
         line[strcspn(line, "\n")] = '\0';
 
-        // codigo SUPER porco, mas que deve funcionar
-        if (startswith(line, "Name:")) {
-            p->name = str_slice(line, 6);
-            continue;
-        }
-
+        // codigo SUPER porco, mas que funciona
         if (startswith(line, "State:")) {
+            // 7 = tamanho de "State:\t"
             p->state = str_slice(line, 7);
             continue;
         }
@@ -71,6 +68,44 @@ int read_status(Process *p)
     return 0;
 }
 
-// - read cmdline (TODO)
+int read_cmdline(Process *p)
+{
+    char *basepath = join_path(PROC_PATH, p->pid);
+    char *status = join_path(basepath, "cmdline");
+
+    FILE *file = fopen(status, "r");
+
+    if (file == NULL) {
+        perror("Erro ao abrir arquivo de status");
+        return 1;
+    }
+
+    char command[256] = {0};
+
+    if(fgets(command, sizeof(command), file) == NULL) {
+        perror("Erro! /cmdline devia ter uma linha.\n");
+        fclose(file);
+        return 1;
+    }
+
+    int first = 0;
+    while(command[++first] != '\0');
+
+    int last = 255;
+    while(command[--last] == '\0');
+
+    for(int i = first; i <= last; i++) {
+        if(command[i] == '\0') command[i] = ' ';
+    }
+
+    command[last + 1] = '\0';
+
+    p->name = calloc(last, sizeof(char));
+    strncpy(p->name, command, last + 1);
+
+    fclose(file);
+    return 0;
+}
 
 // - read stat (TODO)
+// trocar cpu_percentage bruto por delta total e delta idle pra calcular no futuro.

@@ -11,7 +11,8 @@ static void test_process_is_generated(void **state)
 {
     (void) state;
     Process *p = create_process("41");
-    assert_string_equal(p->name, "sleep");
+
+    assert_string_equal(p->name, "sleep 300");
     assert_string_equal(p->state, "S (sleeping)");
     assert_string_equal(p->ppid, "1");
     assert_string_equal(p->uid, "0");
