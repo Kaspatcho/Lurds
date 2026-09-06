@@ -17,6 +17,8 @@ static void test_process_is_generated(void **state)
     assert_string_equal(p->ppid, "1");
     assert_string_equal(p->uid, "0");
     assert_string_equal(p->vmrss, "1216 kB");
+    assert_int_equal(p->active_time, 220);
+    assert_int_equal(p->start_time, 100821);
 }
 
 int main(void)
