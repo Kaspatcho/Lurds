@@ -1,10 +1,16 @@
 #include <stdio.h>
 
-#include "example.h"
+#include "proc_reader.h"
 
 int main(void)
 {
-    printf("Example result: %d\n", add_numbers(2, 3));
+    ProcList* procs = get_proc_list();
+
+    printf("\nName\t\t\t\tPID\tPPID\tUID\tState\t\tVmRSS\n");
+    for(size_t i = 0; i < procs->count; i++) {
+        Process *p = procs->items[i];
+        printf("%-30.30s\t%-4.4s\t%-4.4s\t%-4.4s\t%-12.12s\t%-12.12s\n", p->name, p->pid, p->ppid, p->uid, p->state, p->vmrss);
+    }
 
     return 0;
 }
