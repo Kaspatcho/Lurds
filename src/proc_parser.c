@@ -5,13 +5,6 @@
 #include "utils.h"
 #include "app_env.h"
 
-/*
-# proc_parser
-- read proc files (status, stat and cmdline for now)
-- turn proc files into a Process Struct
-- make dynamic vector of Process called ProcList
-*/
-
 Process* create_process(char *pid)
 {
     Process *p = (Process*) malloc(sizeof(Process));
@@ -71,7 +64,6 @@ int read_status(Process *p)
         }
     }
 
-    // 3. Always close the file when done
     fclose(file);
     return 0;
 }
@@ -114,9 +106,6 @@ int read_cmdline(Process *p)
     fclose(file);
     return 0;
 }
-
-// - read stat (TODO)
-// trocar cpu_percentage bruto por delta total e delta idle pra calcular no futuro.
 
 int read_stat(Process *p)
 {

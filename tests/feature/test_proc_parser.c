@@ -7,6 +7,8 @@
 #include <cmocka.h>
 #include "proc_parser.h"
 
+// verifica se a struct Process e gerada corretamente
+// a partir do PID 41 (PID da proc falsa em fixtures)
 static void test_process_is_generated(void **state)
 {
     (void) state;

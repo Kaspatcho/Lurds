@@ -7,6 +7,7 @@
 #include <cmocka.h>
 #include "proc_reader.h"
 
+// teste pra ver se a listagem de processos do /proc funciona
 static void test_procs_are_listed(void **state)
 {
     (void) state;

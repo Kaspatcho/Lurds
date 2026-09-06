@@ -5,6 +5,8 @@
 #include <cmocka.h>
 #include <stdint.h>
 
+// teste simples de exemplo.
+// verifica se o arquivo tem o texto certo.
 static void test_fixture_has_expected_content(void **state)
 {
     FILE *fixture;

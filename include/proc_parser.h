@@ -1,3 +1,5 @@
+// contem funcoes base para criar struct Process
+// a partir de um arquivo /proc/{PID}
 #ifndef PROC_PARSER_H
 #define PROC_PARSER_H
 
@@ -31,9 +33,21 @@ typedef struct {
     // tempo ocioso = tempo de vida - tempo ativo
 } Process;
 
+// cria uma nova struct Process com base no PID passado.
+// funcao que deve ser usada principalmente, pois chama as demais desse modulo
 Process* create_process(char *pid);
+
+// le o arquivo /proc/{PID}/status e atualiza o Process.
+// tem informacoes como PID, PPID, UID, state e VmRSS
+// (ver o ./tests/fixtures/proc/41/status do fixture pra mais detalhes)
 int read_status(Process *p);
+
+// le o arquivo /proc/{PID}/cmdline e atualiza o Process.
+// tem o nome e argumentos do comando que iniciou o processo.
 int read_cmdline(Process *p);
+
+// le o arquivo /proc/{PID}/stat e atualiza o Process.
+// tem informacoes da CPU. Usado para calcular active_time e start_time.
 int read_stat(Process *p);
 
 #endif

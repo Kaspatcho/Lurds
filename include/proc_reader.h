@@ -1,29 +1,30 @@
+// contem get_proc_list que le o /proc e cria a lista de processos.
 #ifndef PROC_READER_H
 #define PROC_READER_H
 #include "proc_parser.h"
 
-/*
-# proc_reader
-- list procs (from /proc and from /tests/fixture/procs for testing)
-
-# proc_parser
-- read proc files (status, stat and cmdline for now)
-- turn proc files into a Process Struct
-- make dynamic vector of Process called ProcList
-*/
-
-// simple dynamic vector
 typedef struct ProcList {
     size_t count;
     size_t capacity;
-    Process** items; // array of process
+    Process** items; // array de processos
 } ProcList;
 
-// list procs
+// cria ProcList vazia
 ProcList* create_list();
+
+// cria Process com base no PID (com create_process)
+// e adiciona essa struct na lista.
+// se redimensiona automaticamente (chama resize)
 void push_process(ProcList *list, char *pid);
+
+// redimensiona a lista criando um novo array maior
+// e copiando os dados do antigo para o novo
 void resize(ProcList *list);
+
+// destroi a lista e libera memoria alocada
 void delete_list(ProcList **list);
+
+// le /proc e cria lista de acordo com ele.
 ProcList* get_proc_list();
 
 #endif

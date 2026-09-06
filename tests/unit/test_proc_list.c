@@ -6,6 +6,8 @@
 #include <cmocka.h>
 #include "proc_reader.h"
 
+// verifica se a ProcList criar a lista corretamente
+// com o Process correto
 static void test_list_is_created(void **state)
 {
     (void)state;
@@ -15,6 +17,8 @@ static void test_list_is_created(void **state)
     assert_int_equal(l->count, 1);
 }
 
+// testa se o redimensionamento do vetor dinamico funciona
+// e se os dados sao mantidos
 static void test_list_is_redized(void **state)
 {
     (void)state;
@@ -31,6 +35,7 @@ static void test_list_is_redized(void **state)
     assert_string_equal(l->items[0]->pid, "41");
 }
 
+// testa se a lista pode ser destruida
 static void test_list_is_destroyed(void **state)
 {
     (void)state;

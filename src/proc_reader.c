@@ -55,6 +55,8 @@ void delete_list(ProcList **list)
     *list = NULL;
 }
 
+// funcao privada desse modulo
+// daria pra transformar no get_proc_list, mas achei melhor separar
 ProcList* _get_proc_list(char *path) {
     DIR *d;
     d = opendir(path);

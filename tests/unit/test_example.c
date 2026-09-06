@@ -6,6 +6,7 @@
 
 #include "example.h"
 
+// teste simples de exemplo
 static void test_add_numbers_returns_sum(void **state)
 {
     (void)state;
