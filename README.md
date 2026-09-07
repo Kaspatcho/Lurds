@@ -13,22 +13,26 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 ### Tiago
 - [ ] Calcular métricas de consumo de memória e CPU.
 - [ ] Pegar o nome do usuário pelo uid para mostrar na tabela.
+- [ ] Olhar sistemas parecidos como o htop para melhorar as informações da tabela.
 
 ### Rafer
 - [ ] Melhorar inferface.
-- [ ] Olhar sistemas parecidos com o htop para melhorar as informações da tabela.
-- [ ] Se possível, adicionar base para interação com o usuário (parte do kaik).
+- [ ] Adicionar base para interação com o usuário.
+- [ ] Confirmação antes de encerrar.
 
 ### Kaik
-- [ ] Processamento de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
+- [ ] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
 - [ ] Interação com o usuário (usuário deve poder escolher um processo para enviar sinal).
+- [ ] Vizualização dos detalhes do processo selecionado.
 
 ### Hannah
+- [ ] Busca de processo por PID e por nome.
 - [ ] Filtros.
-- [ ] Ordenação (boa sorte).
+- [ ] Ordenação por uso de memória ou CPU (boa sorte).
 
 ### Lurds
 - [ ] Atualização periódica da tabela.
+- [ ] Destaque dos processos pertencentes ao usuário atual.
 - [ ] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
 
 ### Todos (em especial o lider / tiago)
