@@ -65,14 +65,14 @@ docker compose build
 Para abrir um shell no container com o diretório atual montado em `/workspace`:
 
 ```bash
-docker compose run --rm dev bash
+docker compose run -it --rm dev bash
 ```
 
 As alterações feitas no host ficam disponíveis imediatamente no container. Também
 é possível executar qualquer comando diretamente, por exemplo:
 
 ```bash
-docker compose run --rm dev make test
+docker compose run -it --rm dev make test
 ```
 
 ## Erros esperados
