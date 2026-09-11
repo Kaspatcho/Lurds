@@ -16,9 +16,8 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [ ] Olhar sistemas parecidos como o htop para melhorar as informações da tabela.
 
 ### Rafer
-- [ ] Melhorar inferface.
-- [ ] Adicionar base para interação com o usuário.
 - [ ] Confirmação antes de encerrar.
+- [ ] Melhorar inferface.
 
 ### Kaik
 - [ ] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
@@ -40,6 +39,9 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - Registrar evolução do programa
 - Registrar mudanças no cronograma e escopo do projeto.
 - Adicionar E RODAR os testes automáticos.
+
+## Fluxo de Desenvolvimento Sugerido.
+![Diagrama](Diagrama.jpg)
 
 ## Dependências
 
