@@ -35,7 +35,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [ ] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
 
 ### Todos (em especial o lider / tiago)
-- Registrar Lessons Learned registrar a evolução 
+- Registrar erros e aprendizados em Lessons Learned.
 - Registrar evolução do programa
 - Registrar mudanças no cronograma e escopo do projeto.
 - Adicionar E RODAR os testes automáticos.
