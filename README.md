@@ -23,7 +23,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 ### Kaik
 - [ ] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
 - [ ] Interação com o usuário (usuário deve poder escolher um processo para enviar sinal).
-- [ ] Vizualização dos detalhes do processo selecionado.
+- [ ] Visualização dos detalhes do processo selecionado.
 
 ### Hannah
 - [ ] Busca de processo por PID e por nome.
