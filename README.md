@@ -17,6 +17,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 
 ### Rafer
 - [ ] Confirmação antes de encerrar.
+- [ ] Destaque dos processos pertencentes ao usuário atual.
 - [ ] Melhorar inferface.
 
 ### Kaik
@@ -31,7 +32,6 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 
 ### Lurds
 - [ ] Atualização periódica da tabela.
-- [ ] Destaque dos processos pertencentes ao usuário atual.
 - [ ] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
 
 ### Todos (em especial o lider / tiago)
