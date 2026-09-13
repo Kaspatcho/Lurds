@@ -23,10 +23,27 @@ static void test_process_is_generated(void **state)
     assert_int_equal(p->start_time, 100821);
 }
 
+// verifica se a struct Process e gerada corretamente
+// a partir do PID 41 (PID da proc falsa em fixtures)
+static void test_zombie_process_is_read(void **state)
+{
+    (void) state;
+    Process *p = create_process("42");
+
+    assert_string_equal(p->name, "sleep");
+    assert_string_equal(p->state, "Z (zombie)");
+    assert_string_equal(p->ppid, "1");
+    assert_string_equal(p->uid, "0");
+    assert_string_equal(p->vmrss, "0 kB");
+    assert_int_equal(p->active_time, 220);
+    assert_int_equal(p->start_time, 100821);
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_process_is_generated),
+        cmocka_unit_test(test_zombie_process_is_read),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
