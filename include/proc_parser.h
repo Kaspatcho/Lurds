@@ -44,7 +44,12 @@ int read_status(Process *p);
 
 // le o arquivo /proc/{PID}/cmdline e atualiza o Process.
 // tem o nome e argumentos do comando que iniciou o processo.
+// pode vir vazio caso o processo seja uma kernel thread ou um zombie process.
 int read_cmdline(Process *p);
+
+// le o arquivo /proc/{PID}/comm e atualiza o Process.
+// tem o nome do arquivo, usado em caso de erro em /cmdline.
+int read_comm(Process *p);
 
 // le o arquivo /proc/{PID}/stat e atualiza o Process.
 // tem informacoes da CPU. Usado para calcular active_time e start_time.

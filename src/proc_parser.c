@@ -18,7 +18,11 @@ Process* create_process(char *pid)
     p->start_time = 0;
 
     read_status(p);
-    read_cmdline(p);
+    int error = read_cmdline(p);
+    if(error) {
+        read_comm(p);
+    }
+
     read_stat(p);
     return p;
 }
@@ -83,7 +87,6 @@ int read_cmdline(Process *p)
     char command[256] = {0};
 
     if(fgets(command, sizeof(command), file) == NULL) {
-        perror("Erro! /cmdline devia ter uma linha.\n");
         fclose(file);
         return 1;
     }
@@ -102,6 +105,38 @@ int read_cmdline(Process *p)
 
     p->name = calloc(last + 1, sizeof(char));
     strncpy(p->name, command, last + 1);
+
+    fclose(file);
+    return 0;
+}
+
+int read_comm(Process *p)
+{
+    char *basepath = join_path(PROC_PATH, p->pid);
+    char *status = join_path(basepath, "comm");
+
+    FILE *file = fopen(status, "r");
+
+    if (file == NULL) {
+        perror("Erro ao abrir arquivo de status");
+        return 1;
+    }
+
+    char command[256] = {0};
+
+    if(fgets(command, sizeof(command), file) == NULL) {
+        perror("Erro! /comm devia ter uma linha.\n");
+        fclose(file);
+        return 1;
+    }
+
+    int last = 0;
+    char c;
+    while((c = command[++last]) != '\n' && c != '\0');
+
+    p->name = calloc(last + 1, sizeof(char));
+    strncpy(p->name, command, last + 1);
+    p->name[last] = '\0';
 
     fclose(file);
     return 0;
