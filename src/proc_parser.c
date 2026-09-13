@@ -41,6 +41,7 @@ int read_status(Process *p)
 
     char line[256];
 
+    int has_vmrss = 0;
 
     while (fgets(line, sizeof(line), file) != NULL) {
         line[strcspn(line, "\n")] = '\0';
@@ -64,8 +65,14 @@ int read_status(Process *p)
 
         if (startswith(line, "VmRSS:")) {
             p->vmrss = str_slice(line, 11);
+            has_vmrss = 1;
             break; // ultimo. nao precisa mais ler o arquivo
         }
+    }
+
+    // adiciona valor padrao caso nao seja encontrado.
+    if(!has_vmrss) {
+        p->vmrss = "0 kB";
     }
 
     fclose(file);
