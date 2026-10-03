@@ -77,6 +77,7 @@ docker compose run -it --rm dev make test
 
 ## Erros esperados
 Sei lá, Pra mim deu tudo certo. Boa sorte, espero ter ajudado :)
+CONFIGURAR O DOCKER E O GIT É UMA COMPLETA BOSTA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Comandos de desenvolvimento
 
