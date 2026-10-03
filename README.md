@@ -77,7 +77,10 @@ docker compose run -it --rm dev make test
 
 ## Erros esperados
 Sei lá, Pra mim deu tudo certo. Boa sorte, espero ter ajudado :)
+
 CONFIGURAR O DOCKER E O GIT É UMA COMPLETA BOSTA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Importante configurar o WSL para evitar problemas. Abra as configurações > Recursos > Integração WSL  e ative a integração por distro. Normalmente ele pede pra baixar alguma coisa (eu baixei Ubuntu)
 
 ## Comandos de desenvolvimento
 
