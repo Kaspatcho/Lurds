@@ -235,15 +235,6 @@ int read_stat(Process *p)
         while(*ptr == ' ')
             ptr++;
     }
-    printf(
-    "STAT PID %s: utime=%lu stime=%lu cutime=%lu cstime=%lu start=%lu\n",
-    p->pid,
-    utime,
-    stime,
-    cutime,
-    cstime,
-    starttime
-);
 
     p->active_time = utime + stime + cutime + cstime;
     p->start_time = starttime;
