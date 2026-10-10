@@ -55,4 +55,9 @@ int read_comm(Process *p);
 // tem informacoes da CPU. Usado para calcular active_time e start_time.
 int read_stat(Process *p);
 
+unsigned long int get_cpu_total(); // pega o total de ticks do sistema (/proc/stat)
+double calculate_cpu(Process *before, Process *after, unsigned long int cpu_before, unsigned long int cpu_after); // calcula a porcentagem de CPU usada entre dois momentos, com base em dois Process e dois valores de total de ticks do sistema.
+char* get_username(char *uid); // pega o nome do usuario com base no UID (usa getpwuid)
 #endif
+unsigned long int get_memory_total(); // pega o total de memoria do sistema (/proc/meminfo)
+double calculate_memory(Process *p, unsigned long int memory_total);   // calcula a porcentagem da memória usada no processo com base no total.

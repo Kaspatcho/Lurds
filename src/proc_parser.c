@@ -4,6 +4,7 @@
 #include "proc_parser.h"
 #include "utils.h"
 #include "app_env.h"
+#include <pwd.h>
 
 Process* create_process(char *pid)
 {
@@ -157,11 +158,11 @@ int read_stat(Process *p)
     FILE *file = fopen(status, "r");
 
     if (file == NULL) {
-        perror("Erro ao abrir arquivo de status");
+        perror("Erro ao abrir arquivo stat");
         return 1;
     }
 
-    char line[256] = {0};
+    char line[1024] = {0};
 
     if(fgets(line, sizeof(line), file) == NULL) {
         perror("Erro! /stat devia ter uma linha.\n");
@@ -169,43 +170,177 @@ int read_stat(Process *p)
         return 1;
     }
 
-    int start = 0;
-    unsigned long int total_active = 0;
+    fclose(file);
 
-    // pula os 13 primeiros itens, pois utime fica na posicao 14 do /stat
-    for(int c = 0; c < 13; c++) {
-        while(line[start++] != ' ');
+    /*
+     * O campo 2 (nome do processo) pode conter espaços.
+     * Então primeiro encontramos o ')' que fecha o nome.
+     */
+    char *ptr = strrchr(line, ')');
+
+    if (ptr == NULL) {
+        return 1;
     }
 
-    // soma #14, #15, #16 e #17 para contabilizar total ativo
-    for(int c = 0; c < 4; c++) {
-        int end = start;
-        while(line[++end] != ' ');
+    // pula ") "
+    ptr += 2;
 
-        char slice[end - start + 1];
-        memcpy(slice, &line[start], end - start);
-        slice[end - start] = '\0';
+    unsigned long int utime = 0;
+    unsigned long int stime = 0;
+    unsigned long int cutime = 0;
+    unsigned long int cstime = 0;
+    unsigned long int starttime = 0;
 
-        unsigned long int time = strtol(slice, NULL, 10);
-        total_active += time;
-        start = end + 1;
+    /*
+     * Depois do nome:
+     *
+     * campo 3  = state
+     * campo 4  = ppid
+     * ...
+     * campo 14 = utime
+     * campo 15 = stime
+     * campo 16 = cutime
+     * campo 17 = cstime
+     * ...
+     * campo 22 = starttime
+     */
+
+    for(int field = 3; field <= 22; field++) {
+
+        char slice[64];
+        int i = 0;
+
+        while(*ptr != ' ' && *ptr != '\0') {
+            slice[i++] = *ptr;
+            ptr++;
+        }
+
+        slice[i] = '\0';
+
+        if(field == 14)
+            utime = strtoul(slice, NULL, 10);
+
+        else if(field == 15)
+            stime = strtoul(slice, NULL, 10);
+
+        else if(field == 16)
+            cutime = strtoul(slice, NULL, 10);
+
+        else if(field == 17)
+            cstime = strtoul(slice, NULL, 10);
+
+        else if(field == 22)
+            starttime = strtoul(slice, NULL, 10);
+
+        while(*ptr == ' ')
+            ptr++;
+    }
+    printf(
+    "STAT PID %s: utime=%lu stime=%lu cutime=%lu cstime=%lu start=%lu\n",
+    p->pid,
+    utime,
+    stime,
+    cutime,
+    cstime,
+    starttime
+);
+
+    p->active_time = utime + stime + cutime + cstime;
+    p->start_time = starttime;
+
+    return 0;
+}
+ double calculate_cpu(Process *before, Process *after,
+                     unsigned long int cpu_before,
+                     unsigned long int cpu_after) 
+{
+    unsigned long int delta_ativo =
+        after->active_time - before->active_time; // delta ativo do processo
+
+    unsigned long int delta_total =
+        cpu_after - cpu_before; // delta total do sistema
+
+    if (delta_total == 0)
+        return 0.0;
+
+    return ((double)delta_ativo / delta_total) * 100.0; // porcentagem de CPU no processo
+}
+char* get_username(char *uid) // pega o nome do usuario com base no UID (usa getpwuid)
+{
+    struct passwd *user = getpwuid(strtoul(uid, NULL, 10)); // converte o uid de string para unsigned long int
+
+    if (user == NULL)
+        return NULL;
+
+    return user->pw_name;
+}
+unsigned long int get_cpu_total()
+{
+    FILE *file = fopen("/proc/stat", "r");
+
+    if (file == NULL) {
+        perror("Erro ao abrir /proc/stat");
+        return 0;
     }
 
-    // pula mais 4 itens, pois starttime fica na posicao 22.
-    for(int c = 0; c < 4; c++) {
-        while(line[start++] != ' ');
+    char line[256];
+
+    if (fgets(line, sizeof(line), file) == NULL) {
+        fclose(file);
+        return 0;
     }
-
-    int end = start;
-    while(line[++end] != ' ');
-
-    char slice[end - start + 1];
-    memcpy(slice, &line[start], end - start);
-    slice[end - start] = '\0';
-
-    p->active_time = total_active;
-    p->start_time = strtol(slice, NULL, 10);
 
     fclose(file);
-    return 0;
+
+    unsigned long int user;
+    unsigned long int nice;
+    unsigned long int system;
+    unsigned long int idle;
+
+    int result = sscanf(
+        line,
+        "cpu %lu %lu %lu %lu",
+        &user,
+        &nice,
+        &system,
+        &idle
+    );
+
+    if (result != 4)
+        return 0;
+
+    return user + nice + system + idle;
+}
+
+unsigned long int get_memory_total()
+{
+    FILE *file = fopen("/proc/meminfo", "r");
+
+    if (file == NULL) {
+        perror("Erro ao abrir /proc/meminfo");
+        return 0;
+    }
+
+    char line[256];
+
+    unsigned long int mem_total = 0;
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (sscanf(line, "MemTotal: %lu kB", &mem_total) == 1) {
+            break;
+        }
+    }
+
+    fclose(file);
+    return mem_total; // em kB
+}
+
+double calculate_memory(Process *p, unsigned long int memory_total)
+{
+    if (memory_total == 0)
+        return 0.0;
+
+    unsigned long int memory_used = strtoul(p->vmrss, NULL, 10);
+
+    return ((double)memory_used / memory_total) * 100.0;
 }
