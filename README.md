@@ -11,9 +11,9 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [x] Criar `main.c` de exemplo como prova de conceito da estrutura inicial.
 
 ### Tiago
-- [ ] Calcular métricas de consumo de memória e CPU.
-- [ ] Pegar o nome do usuário pelo uid para mostrar na tabela.
-- [ ] Olhar sistemas parecidos como o htop para melhorar as informações da tabela.
+- [x] Calcular métricas de consumo de memória e CPU.
+- [x] Pegar o nome do usuário pelo uid para mostrar na tabela.
+- [x] Olhar sistemas parecidos como o htop para melhorar as informações da tabela.
 
 ### Rafer
 - [ ] Confirmação antes de encerrar.
@@ -153,3 +153,5 @@ se for muito pequeno, pode dar segfault quando você for acessar no futuro.
 reproduzir no /proc do fedora toda hora.
 4. O compilador do C é muito bom, ele mostra a cagada que você fez na maior parte das vezes
 (a não ser que vc tenha se enfiado num segfault da vida).
+5. Organizem bem as suas pastas para conseguirem subit o commit do git corretamente.
+6. O sistema está me deixando louco, gostaria que o C explodisse
