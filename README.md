@@ -55,7 +55,7 @@ Para utilizar o projeto, é necessário ter [Docker](https://docs.docker.com/des
 com o plugin [Docker Compose](https://docs.docker.com/compose/install/) instalado no host.
 
 ## Como configurar o Docker
-Configurar o docker é muito chato. Os passos a seguir consideram que você já instalou o docker na sua máquina (por favor ne).
+Depois de algum sofrimento do Tiago, decidi adicionar o passo a passo para configurar o docker que é bem chato. Os passos a seguir consideram que você já instalou o docker na sua máquina (por favor ne).
 
 ### 1. Veja se a sua máquina tem a virtualização habilitada
 Vá em Gerenciador de Tarefas > Desempenho > CPU > Virtualização (embaixo do gráfico de utilização CPU).
