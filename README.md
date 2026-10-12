@@ -54,6 +54,32 @@ O ambiente Docker instala:
 Para utilizar o projeto, é necessário ter [Docker](https://docs.docker.com/desktop/setup/install/windows-install/)
 com o plugin [Docker Compose](https://docs.docker.com/compose/install/) instalado no host.
 
+## Como configurar o Docker
+Configurar o docker é muito chato. Os passos a seguir consideram que você já instalou o docker na sua máquina (por favor ne).
+
+### 1. Veja se a sua máquina tem a virtualização habilitada
+Vá em Gerenciador de Tarefas > Desempenho > CPU > Virtualização (embaixo do gráfico de utilização CPU).
+Se estiver habilitado, ótimo! Pule para [Ativar o WSL](#3-ativar-o-wsl).
+Senão (perdemo), vá para [Habilitar Virtualização](#2-habilitar-virtualização).
+
+### 2. Habilitar Virtualização
+1. reinicie o computador
+2. assim que a tela apagar e começar a ligar novamente, pressione repetidamente a tecla de acesso à BIOS (varia de acordo com a placa, mas pode ser `F2`, `F10` ou `delete`)
+3. Se a BIOS abrir em Easy Mode (tela simplificada), pressione `F7` para alternar para o Modo Avançado
+4. essa parte depende muito da sua placa mãe, mas procure algo como "Avançado", "CPU Configuration", "CPU Features" ou "Virtualization Support".
+Em alguma parte dessas vai ter uma opção para habilitar a virtualização (pesquise como fazer isso na sua placa mãe especificamente)
+
+### 3. Ativar o WSL
+1. Pesquise na barra do windows `Ativar ou desativar recursos do Windows`
+2. Na lista de recursos, marque `Plataforma de Máquina Virtual`, `Plataforma do Hipervisor do Windows` e `Subsistema do Windows para Linux`
+3. Reinicie a máquina
+4. Abra o programa `prompt de comando` (cmd) como administrador
+5. Execute o comando `wsl --install`
+6. Reinicie a máquina novamente
+
+### 4. Habilitar Integração WSL no Docker:
+Vá em Configurações (engrenagem no topo do programa) > Resources > WSL Integration > Enable integration with my default WSL distro (habilite essa opção).
+
 ## Ambiente Docker
 
 Construa a imagem Fedora do projeto:
