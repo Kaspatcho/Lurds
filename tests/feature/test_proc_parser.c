@@ -11,7 +11,7 @@
 // a partir do PID 41 (PID da proc falsa em fixtures)
 static void test_process_is_generated(void **state)
 {
-    (void) state;
+    (void)state;
     Process *p = create_process("41");
 
     assert_string_equal(p->name, "sleep 300");
@@ -27,7 +27,7 @@ static void test_process_is_generated(void **state)
 // a partir do PID 41 (PID da proc falsa em fixtures)
 static void test_zombie_process_is_read(void **state)
 {
-    (void) state;
+    (void)state;
     Process *p = create_process("42");
 
     assert_string_equal(p->name, "sleep");
@@ -41,7 +41,7 @@ static void test_zombie_process_is_read(void **state)
 // verifica se o UID e convertido corretamente para o nome do usuario
 static void test_get_username(void **state)
 {
-    (void) state;
+    (void)state;
 
     char *username = get_username("0");
 
@@ -49,22 +49,20 @@ static void test_get_username(void **state)
     assert_string_equal(username, "root");
 }
 
-
 // verifica se o total de CPU pode ser lido
 static void test_get_cpu_total(void **state)
 {
-    (void) state;
+    (void)state;
 
     unsigned long int cpu_total = get_cpu_total();
 
     assert_true(cpu_total > 0);
 }
 
-
 // verifica se o calculo de CPU esta correto
 static void test_calculate_cpu(void **state)
 {
-    (void) state;
+    (void)state;
 
     Process before;
     Process after;
@@ -79,8 +77,7 @@ static void test_calculate_cpu(void **state)
         &before,
         &after,
         cpu_before,
-        cpu_after
-    );
+        cpu_after);
 
     // delta ativo = 50
     // delta total = 100
@@ -92,7 +89,7 @@ int main(void)
 {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_process_is_generated),
-        cmocka_unit_test(test_zombie_process_is_read),  
+        cmocka_unit_test(test_zombie_process_is_read),
         cmocka_unit_test(test_get_username),
         cmocka_unit_test(test_get_cpu_total),
         cmocka_unit_test(test_calculate_cpu),

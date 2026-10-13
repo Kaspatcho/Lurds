@@ -6,9 +6,9 @@
 #include "app_env.h"
 #include <pwd.h>
 
-Process* create_process(char *pid)
+Process *create_process(char *pid)
 {
-    Process *p = (Process*) malloc(sizeof(Process));
+    Process *p = (Process *)malloc(sizeof(Process));
     p->pid = pid;
     p->name = NULL;
     p->ppid = NULL;
@@ -20,7 +20,8 @@ Process* create_process(char *pid)
 
     read_status(p);
     int error = read_cmdline(p);
-    if(error) {
+    if (error)
+    {
         read_comm(p);
     }
 
@@ -35,7 +36,8 @@ int read_status(Process *p)
 
     FILE *file = fopen(status, "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         perror("Erro ao abrir arquivo de status");
         return 1;
     }
@@ -44,27 +46,32 @@ int read_status(Process *p)
 
     int has_vmrss = 0;
 
-    while (fgets(line, sizeof(line), file) != NULL) {
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
         line[strcspn(line, "\r\n")] = '\0';
 
         // codigo SUPER porco, mas que funciona
-        if (startswith(line, "State:")) {
+        if (startswith(line, "State:"))
+        {
             // 7 = tamanho de "State:\t"
             p->state = str_slice(line, 7);
             continue;
         }
 
-        if (startswith(line, "PPid:")) {
+        if (startswith(line, "PPid:"))
+        {
             p->ppid = str_slice(line, 6);
             continue;
         }
 
-        if (startswith(line, "Uid:")) {
+        if (startswith(line, "Uid:"))
+        {
             p->uid = str_slice_until(line, 5, '\t');
             continue;
         }
 
-        if (startswith(line, "VmRSS:")) {
+        if (startswith(line, "VmRSS:"))
+        {
             p->vmrss = str_slice(line, 11);
             has_vmrss = 1;
             break; // ultimo. nao precisa mais ler o arquivo
@@ -72,7 +79,8 @@ int read_status(Process *p)
     }
 
     // adiciona valor padrao caso nao seja encontrado.
-    if(!has_vmrss) {
+    if (!has_vmrss)
+    {
         p->vmrss = "0 kB";
     }
 
@@ -87,26 +95,32 @@ int read_cmdline(Process *p)
 
     FILE *file = fopen(status, "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         perror("Erro ao abrir arquivo de status");
         return 1;
     }
 
     char command[256] = {0};
 
-    if(fgets(command, sizeof(command), file) == NULL) {
+    if (fgets(command, sizeof(command), file) == NULL)
+    {
         fclose(file);
         return 1;
     }
 
     int first = 0;
-    while(command[++first] != '\0');
+    while (command[++first] != '\0')
+        ;
 
     int last = 255;
-    while(command[--last] == '\0');
+    while (command[--last] == '\0')
+        ;
 
-    for(int i = first; i <= last; i++) {
-        if(command[i] == '\0') command[i] = ' ';
+    for (int i = first; i <= last; i++)
+    {
+        if (command[i] == '\0')
+            command[i] = ' ';
     }
 
     command[last + 1] = '\0';
@@ -122,34 +136,37 @@ int read_comm(Process *p)
 {
     char *basepath = join_path(PROC_PATH, p->pid);
     char *status = join_path(basepath, "comm");
- 
+
     FILE *file = fopen(status, "r");
- 
-    if (file == NULL) {
+
+    if (file == NULL)
+    {
         perror("Erro ao abrir arquivo comm");
         return 1;
     }
- 
+
     char command[256] = {0};
- 
-    if (fgets(command, sizeof(command), file) == NULL) {
+
+    if (fgets(command, sizeof(command), file) == NULL)
+    {
         perror("Erro ao ler arquivo comm");
         fclose(file);
         return 1;
     }
- 
+
     fclose(file);
- 
+
     command[strcspn(command, "\r\n")] = '\0';
- 
+
     p->name = calloc(strlen(command) + 1, sizeof(char));
- 
-    if (p->name == NULL) {
+
+    if (p->name == NULL)
+    {
         return 1;
     }
- 
+
     strcpy(p->name, command);
- 
+
     return 0;
 }
 
@@ -160,14 +177,16 @@ int read_stat(Process *p)
 
     FILE *file = fopen(status, "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         perror("Erro ao abrir arquivo stat");
         return 1;
     }
 
     char line[1024] = {0};
 
-    if(fgets(line, sizeof(line), file) == NULL) {
+    if (fgets(line, sizeof(line), file) == NULL)
+    {
         perror("Erro! /stat devia ter uma linha.\n");
         fclose(file);
         return 1;
@@ -181,7 +200,8 @@ int read_stat(Process *p)
      */
     char *ptr = strrchr(line, ')');
 
-    if (ptr == NULL) {
+    if (ptr == NULL)
+    {
         return 1;
     }
 
@@ -208,34 +228,36 @@ int read_stat(Process *p)
      * campo 22 = starttime
      */
 
-    for(int field = 3; field <= 22; field++) {
+    for (int field = 3; field <= 22; field++)
+    {
 
         char slice[64];
         int i = 0;
 
-        while(*ptr != ' ' && *ptr != '\0') {
+        while (*ptr != ' ' && *ptr != '\0')
+        {
             slice[i++] = *ptr;
             ptr++;
         }
 
         slice[i] = '\0';
 
-        if(field == 14)
+        if (field == 14)
             utime = strtoul(slice, NULL, 10);
 
-        else if(field == 15)
+        else if (field == 15)
             stime = strtoul(slice, NULL, 10);
 
-        else if(field == 16)
+        else if (field == 16)
             cutime = strtoul(slice, NULL, 10);
 
-        else if(field == 17)
+        else if (field == 17)
             cstime = strtoul(slice, NULL, 10);
 
-        else if(field == 22)
+        else if (field == 22)
             starttime = strtoul(slice, NULL, 10);
 
-        while(*ptr == ' ')
+        while (*ptr == ' ')
             ptr++;
     }
 
@@ -244,9 +266,9 @@ int read_stat(Process *p)
 
     return 0;
 }
- double calculate_cpu(Process *before, Process *after,
+double calculate_cpu(Process *before, Process *after,
                      unsigned long int cpu_before,
-                     unsigned long int cpu_after) 
+                     unsigned long int cpu_after)
 {
     unsigned long int delta_ativo =
         after->active_time - before->active_time; // delta ativo do processo
@@ -259,7 +281,7 @@ int read_stat(Process *p)
 
     return ((double)delta_ativo / delta_total) * 100.0; // porcentagem de CPU no processo
 }
-char* get_username(char *uid) // pega o nome do usuario com base no UID (usa getpwuid)
+char *get_username(char *uid) // pega o nome do usuario com base no UID (usa getpwuid)
 {
     struct passwd *user = getpwuid(strtoul(uid, NULL, 10)); // converte o uid de string para unsigned long int
 
@@ -272,14 +294,16 @@ unsigned long int get_cpu_total()
 {
     FILE *file = fopen("/proc/stat", "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         perror("Erro ao abrir /proc/stat");
         return 0;
     }
 
     char line[256];
 
-    if (fgets(line, sizeof(line), file) == NULL) {
+    if (fgets(line, sizeof(line), file) == NULL)
+    {
         fclose(file);
         return 0;
     }
@@ -297,8 +321,7 @@ unsigned long int get_cpu_total()
         &user,
         &nice,
         &system,
-        &idle
-    );
+        &idle);
 
     if (result != 4)
         return 0;
@@ -310,7 +333,8 @@ unsigned long int get_memory_total()
 {
     FILE *file = fopen("/proc/meminfo", "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         perror("Erro ao abrir /proc/meminfo");
         return 0;
     }
@@ -319,8 +343,10 @@ unsigned long int get_memory_total()
 
     unsigned long int mem_total = 0;
 
-    while (fgets(line, sizeof(line), file) != NULL) {
-        if (sscanf(line, "MemTotal: %lu kB", &mem_total) == 1) {
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        if (sscanf(line, "MemTotal: %lu kB", &mem_total) == 1)
+        {
             break;
         }
     }
