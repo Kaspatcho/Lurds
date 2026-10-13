@@ -45,7 +45,7 @@ int read_status(Process *p)
     int has_vmrss = 0;
 
     while (fgets(line, sizeof(line), file) != NULL) {
-        line[strcspn(line, "\n")] = '\0';
+        line[strcspn(line, "\r\n")] = '\0';
 
         // codigo SUPER porco, mas que funciona
         if (startswith(line, "State:")) {
@@ -122,31 +122,34 @@ int read_comm(Process *p)
 {
     char *basepath = join_path(PROC_PATH, p->pid);
     char *status = join_path(basepath, "comm");
-
+ 
     FILE *file = fopen(status, "r");
-
+ 
     if (file == NULL) {
-        perror("Erro ao abrir arquivo de status");
+        perror("Erro ao abrir arquivo comm");
         return 1;
     }
-
+ 
     char command[256] = {0};
-
-    if(fgets(command, sizeof(command), file) == NULL) {
-        perror("Erro! /comm devia ter uma linha.\n");
+ 
+    if (fgets(command, sizeof(command), file) == NULL) {
+        perror("Erro ao ler arquivo comm");
         fclose(file);
         return 1;
     }
-
-    int last = 0;
-    char c;
-    while((c = command[++last]) != '\n' && c != '\0');
-
-    p->name = calloc(last + 1, sizeof(char));
-    strncpy(p->name, command, last + 1);
-    p->name[last] = '\0';
-
+ 
     fclose(file);
+ 
+    command[strcspn(command, "\r\n")] = '\0';
+ 
+    p->name = calloc(strlen(command) + 1, sizeof(char));
+ 
+    if (p->name == NULL) {
+        return 1;
+    }
+ 
+    strcpy(p->name, command);
+ 
     return 0;
 }
 

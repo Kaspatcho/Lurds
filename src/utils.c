@@ -34,12 +34,20 @@ char* str_slice(char *string, size_t len)
 char* str_slice_until(char *string, size_t start, const char c)
 {
     size_t length = 0;
-    while(string[start + ++length] != c && length < 4);
-
-    char *n = calloc(length, sizeof(char));
-    strncpy(n, ((char*) string) + start, length + 1);
+ 
+    while (string[start + length] != '\0' &&
+           string[start + length] != c) {
+        length++;
+    }
+ 
+    char *n = calloc(length + 1, sizeof(char));
+    if (n == NULL) {
+        return NULL;
+    }
+ 
+    strncpy(n, string + start, length);
     n[length] = '\0';
-
+ 
     return n;
 }
 

@@ -22,7 +22,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 
 ### Kaik
 - [ ] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
-- [ ] Interação com o usuário (usuário deve poder escolher um processo para enviar sinal).
+- [x] Interação com o usuário (usuário deve poder escolher um processo para enviar sinal).
 - [ ] Visualização dos detalhes do processo selecionado.
 
 ### Hannah
@@ -106,7 +106,9 @@ Sei lá, Pra mim deu tudo certo. Boa sorte, espero ter ajudado :)
 
 CONFIGURAR O DOCKER E O GIT É UMA COMPLETA BOSTA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Importante configurar o WSL para evitar problemas. Abra as configurações > Recursos > Integração WSL  e ative a integração por distro. Normalmente ele pede pra baixar alguma coisa (eu baixei Ubuntu)
+Importante configurar o WSL para evitar problemas. Abra as configurações > Recursos > Integração WSL  e ative a integração por distro. Normalmente ele pede pra baixar alguma coisa (eu baixei Ubuntu);
+
+não apague nenhuma linha, se não, vc se perde.
 
 ## Comandos de desenvolvimento
 
@@ -131,6 +133,7 @@ tests/unit/       Teste unitário com cmocka
 tests/feature/    Teste de feature com cmocka
 tests/fixtures/   Arquivos controlados usados pelos testes
 build/            Artefatos gerados pelo Makefile (não versionados)
+limpar            comando que limpa a tela
 ```
 
 ## Testes
