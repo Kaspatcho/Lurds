@@ -12,6 +12,8 @@
 #define TEXTO_PRETO "\033[30m"
 #define RESET "\033[0m"
 
+#define MAX_LINES 15
+
 void print_proc_table(
     ProcList *procs_before,
     ProcList *procs_after,
@@ -25,7 +27,20 @@ void print_proc_table(
         "Name", "PID", "PPID", "USER", "State",
         "CPU", "MEM", "Active Time", "VmRSS");
 
-    for (size_t i = 0; i < procs_after->count; i++)
+    int count = (int) procs_after->count;
+    int lines = count < MAX_LINES ? count : MAX_LINES;
+
+    int start = selected_index - lines / 2;
+
+    if (start < 0)
+        start = 0;
+
+    if (start > count - lines)
+        start = count - lines;
+
+    int end = start + lines;
+
+    for (size_t i = start; i < (size_t) end; i++)
     {
         Process *p = procs_after->items[i];
 
