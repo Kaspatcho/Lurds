@@ -31,7 +31,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [ ] Ordenação por uso de memória ou CPU (boa sorte).
 
 ### Lurds
-- [ ] Atualização periódica da tabela.
+- [x] Atualização periódica da tabela.
 - [ ] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
 
 ### Todos (em especial o lider / tiago)
@@ -133,7 +133,6 @@ tests/unit/       Teste unitário com cmocka
 tests/feature/    Teste de feature com cmocka
 tests/fixtures/   Arquivos controlados usados pelos testes
 build/            Artefatos gerados pelo Makefile (não versionados)
-limpar            comando que limpa a tela
 ```
 
 ## Testes
