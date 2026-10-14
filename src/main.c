@@ -105,9 +105,16 @@ int main(void)
     }
  
     delete_list(&procs_before);
+<<<<<<< HEAD
  
     printf("%s\033[1EOficialmente saindo...\n", RESET);
  
+=======
+    delete_list(&procs_after);
+
+    printf("\033[2J\033[H");
+    fflush(stdout);
+>>>>>>> ea8c3ba0cf404f9cf2877452754e92c639e32d2d
     return 0;
 }
  
