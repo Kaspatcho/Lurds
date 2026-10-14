@@ -7,27 +7,66 @@
 #include <pwd.h>
 
 Process *create_process(char *pid)
+
 {
-    Process *p = (Process *)malloc(sizeof(Process));
-    p->pid = pid;
-    p->name = NULL;
-    p->ppid = NULL;
-    p->uid = NULL;
-    p->state = NULL;
-    p->vmrss = NULL;
-    p->active_time = 0;
-    p->start_time = 0;
 
-    read_status(p);
-    int error = read_cmdline(p);
-    if (error)
+    Process *p = malloc(sizeof(Process));
+ 
+    if (p == NULL)
+
     {
-        read_comm(p);
-    }
 
+        return NULL;
+
+    }
+ 
+    p->pid = calloc(strlen(pid) + 1, sizeof(char));
+ 
+    if (p->pid == NULL)
+
+    {
+
+        free(p);
+
+        return NULL;
+
+    }
+ 
+    strcpy(p->pid, pid);
+ 
+    p->name = NULL;
+
+    p->ppid = NULL;
+
+    p->uid = NULL;
+
+    p->state = NULL;
+
+    p->vmrss = NULL;
+
+    p->active_time = 0;
+
+    p->start_time = 0;
+ 
+    read_status(p);
+ 
+    int error = read_cmdline(p);
+ 
+    if (error)
+
+    {
+
+        read_comm(p);
+
+    }
+ 
     read_stat(p);
+ 
     return p;
+
 }
+
+ 
 
 int read_status(Process *p)
 {
@@ -79,10 +118,12 @@ int read_status(Process *p)
     }
 
     // adiciona valor padrao caso nao seja encontrado.
-    if (!has_vmrss)
-    {
-        p->vmrss = "0 kB";
-    }
+            if (!has_vmrss) {
+                p->vmrss = calloc(5, sizeof(char));
+                if (p->vmrss != NULL) {
+                    strcpy(p->vmrss, "0 kB");
+                            }
+                       }
 
     fclose(file);
     return 0;

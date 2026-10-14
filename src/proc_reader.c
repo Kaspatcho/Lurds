@@ -27,11 +27,18 @@ ProcList* create_list()
 
 void push_process(ProcList *list, char *pid)
 {
-    if(list->count == list->capacity) {
+    if (list->count == list->capacity)
+    {
         resize(list);
     }
-
+ 
     Process *p = create_process(pid);
+ 
+    if (p == NULL)
+    {
+        return;
+    }
+ 
     list->items[list->count++] = p;
 }
 
@@ -48,8 +55,25 @@ void resize(ProcList *list)
     list->items = new_items;
 }
 
-void delete_list(ProcList **list)
-{
+void delete_list(ProcList **list){
+    if (list == NULL || *list == NULL) {
+        return;
+    }
+ 
+    for (size_t i = 0; i < (*list)->count; i++) {
+        Process *p = (*list)->items[i];
+ 
+        if (p != NULL) {
+            free(p->pid);
+            free(p->name);
+            free(p->ppid);
+            free(p->uid);
+            free(p->state);
+            free(p->vmrss);
+            free(p);
+        }
+    }
+ 
     free((*list)->items);
     free(*list);
     *list = NULL;
@@ -57,35 +81,30 @@ void delete_list(ProcList **list)
 
 // funcao privada desse modulo
 // daria pra transformar no get_proc_list, mas achei melhor separar
-ProcList* _get_proc_list(char *path) {
-    DIR *d;
-    d = opendir(path);
-
+ProcList* _get_proc_list(char *path)
+{
+    DIR *d = opendir(path);
+ 
     if (!d) {
         perror("Nao foi possivel abrir o diretorio");
         return NULL;
     }
-
+ 
     ProcList *directory = create_list();
     struct dirent *dir;
-
+ 
     while ((dir = readdir(d)) != NULL) {
-        // pula diretorios "fake" do linux e os que nao sao processos
-        // (.. aponta pro diretorio pai e . aponta pro atual)
-        if(!is_numeric(dir->d_name)) {
+        // Ignora entradas que nao representam PIDs numericos
+        if (!is_numeric(dir->d_name)) {
             continue;
         }
-
-        // precisa alocar em outro lugar, pq dir->d_name possivelmente
-        // vai ser destruido sem eu saber.
-        char *pid = calloc(strlen(dir->d_name) + 1, sizeof(char));
-        strcpy(pid, dir->d_name);
-        push_process(directory, pid);
+        push_process(directory, dir->d_name);
     }
-
+ 
     closedir(d);
     return directory;
 }
+
 
 ProcList* get_proc_list() {
     char *path = PROC_PATH;
