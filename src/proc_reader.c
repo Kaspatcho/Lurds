@@ -8,9 +8,9 @@
 
 const unsigned int INITIAL_CAPACITY = 4;
 
-ProcList* create_list()
+ProcList *create_list()
 {
-    ProcList *list = (ProcList*) malloc(sizeof(ProcList));
+    ProcList *list = (ProcList *)malloc(sizeof(ProcList));
     list->count = 0;
     list->capacity = INITIAL_CAPACITY;
 
@@ -20,7 +20,7 @@ ProcList* create_list()
     // tambem calloc e mais lento que malloc, entao deve ser usado somente na criacao
     // malloc deixa lixo na memoria alocada, entao deve ser usado quando for ser
     // imediatamente preenchido.
-    list->items = calloc(list->capacity, sizeof(Process*));
+    list->items = calloc(list->capacity, sizeof(Process *));
 
     return list;
 }
@@ -31,23 +31,23 @@ void push_process(ProcList *list, char *pid)
     {
         resize(list);
     }
- 
+
     Process *p = create_process(pid);
- 
+
     if (p == NULL)
     {
         return;
     }
- 
+
     list->items[list->count++] = p;
 }
 
 void resize(ProcList *list)
 {
-    int new_cap = list->capacity *1.5f;
+    int new_cap = list->capacity * 1.5f;
 
-    Process** new_items = malloc(sizeof(Process*) * new_cap);
-    memcpy(new_items, list->items, sizeof(Process*) * list->capacity);
+    Process **new_items = malloc(sizeof(Process *) * new_cap);
+    memcpy(new_items, list->items, sizeof(Process *) * list->capacity);
 
     free(list->items);
 
@@ -55,15 +55,19 @@ void resize(ProcList *list)
     list->items = new_items;
 }
 
-void delete_list(ProcList **list){
-    if (list == NULL || *list == NULL) {
+void delete_list(ProcList **list)
+{
+    if (list == NULL || *list == NULL)
+    {
         return;
     }
- 
-    for (size_t i = 0; i < (*list)->count; i++) {
+
+    for (size_t i = 0; i < (*list)->count; i++)
+    {
         Process *p = (*list)->items[i];
- 
-        if (p != NULL) {
+
+        if (p != NULL)
+        {
             free(p->pid);
             free(p->name);
             free(p->ppid);
@@ -73,7 +77,7 @@ void delete_list(ProcList **list){
             free(p);
         }
     }
- 
+
     free((*list)->items);
     free(*list);
     *list = NULL;
@@ -81,32 +85,35 @@ void delete_list(ProcList **list){
 
 // funcao privada desse modulo
 // daria pra transformar no get_proc_list, mas achei melhor separar
-ProcList* _get_proc_list(char *path)
+ProcList *_get_proc_list(char *path)
 {
     DIR *d = opendir(path);
- 
-    if (!d) {
+
+    if (!d)
+    {
         perror("Nao foi possivel abrir o diretorio");
         return NULL;
     }
- 
+
     ProcList *directory = create_list();
     struct dirent *dir;
- 
-    while ((dir = readdir(d)) != NULL) {
+
+    while ((dir = readdir(d)) != NULL)
+    {
         // Ignora entradas que nao representam PIDs numericos
-        if (!is_numeric(dir->d_name)) {
+        if (!is_numeric(dir->d_name))
+        {
             continue;
         }
         push_process(directory, dir->d_name);
     }
- 
+
     closedir(d);
     return directory;
 }
 
-
-ProcList* get_proc_list() {
+ProcList *get_proc_list()
+{
     char *path = PROC_PATH;
     return _get_proc_list(path);
 }

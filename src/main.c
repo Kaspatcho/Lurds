@@ -2,57 +2,55 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <termios.h>
- 
+#include <pthread.h>
+
+#include "proc_table.h"
 #include "proc_reader.h"
 #include "proc_parser.h"
- 
-#define BG_AMARELO "\033[43m"
-#define TEXTO_PRETO "\033[30m"
-#define RESET "\033[0m"
- 
-void print_proc_table(
-    ProcList *procs_before,
-    ProcList *procs_after,
-    unsigned long int cpu_before,
-    unsigned long int cpu_after,
-    unsigned long int memory_total,
-    int selected_index
-);
- 
-int getch_timeout(void);
- 
+
+void *update_table_info();
+void update_proc_values(ProcList **procs_before, ProcList **procs_after, unsigned long int *cpu_before, unsigned long int *cpu_after);
+
+TableInfo table_info;
+
 int main(void)
 {
+    // Inicializa a estrutura global e o mutex
+    table_info.procs_before = NULL;
+    table_info.procs_after = NULL;
+    table_info.dados_prontos = 0;
+    pthread_mutex_init(&table_info.mutex, NULL);
+
     int selected_index = 0;
     int running = 1;
- 
-    ProcList *procs_before = get_proc_list();
- 
-    if (procs_before == NULL)
+    unsigned long int memory_total = get_memory_total();
+
+    // Cria a thread secundária para rodar em paralelo
+    pthread_t thread_id;
+    if (pthread_create(&thread_id, NULL, update_table_info, NULL) != 0)
     {
-        fprintf(stderr, "Erro ao carregar os processos.\n");
+        perror("Erro ao criar a thread");
         return 1;
     }
- 
+
+    // calcula a primeira vez de forma sincrona. O resto e atualizado pela thread em paralelo
+    ProcList *procs_before = get_proc_list();
     unsigned long int cpu_before = get_cpu_total();
- 
-    /* Aguarda a primeira medição de CPU */
     sleep(1);
- 
+    ProcList *procs_after = get_proc_list();
+    unsigned long int cpu_after = get_cpu_total();
+
     while (running)
     {
-        ProcList *procs_after = get_proc_list();
- 
+        update_proc_values(&procs_before, &procs_after, &cpu_before, &cpu_after);
+
         if (procs_after == NULL)
         {
-            fprintf(stderr, "Erro ao atualizar os processos.\n");
-            break;
+            printf("Processo ainda nao carregado. Esperando mais um pouco.\n");
+            sleep(1);
+            continue;
         }
- 
-        unsigned long int cpu_after = get_cpu_total();
-        unsigned long int memory_total = get_memory_total();
- 
+
         /* Mantém a seleção dentro dos limites */
         if (procs_after->count == 0)
         {
@@ -62,191 +60,104 @@ int main(void)
         {
             selected_index = (int)procs_after->count - 1;
         }
- 
+
         printf("\033[H\033[J");
- 
+
         print_proc_table(
             procs_before,
             procs_after,
             cpu_before,
             cpu_after,
             memory_total,
-            selected_index
-        );
- 
+            selected_index);
+
         printf("\n[w] Subir | [s] Descer | [q] Sair\n");
         printf("Atualizando automaticamente a cada segundo...\n");
         printf("Processos encontrados: %zu\n", procs_after->count);
- 
+
         fflush(stdout);
- 
+
         int tecla = getch_timeout();
- 
+
         if (tecla == 'q' || tecla == 'Q')
         {
             running = 0;
         }
-        else if ((tecla == 'w' || tecla == 'W')
-&& selected_index > 0)
+        else if ((tecla == 'w' || tecla == 'W') && selected_index > 0)
         {
             selected_index--;
         }
-        else if ((tecla == 's' || tecla == 'S')
-&& selected_index + 1 < (int)procs_after->count)
+        else if ((tecla == 's' || tecla == 'S') && selected_index + 1 < (int)procs_after->count)
         {
             selected_index++;
         }
- 
-        /* Atualiza a referência para o próximo cálculo */
-        delete_list(&procs_before);
- 
-        procs_before = procs_after;
-        cpu_before = cpu_after;
     }
- 
-    delete_list(&procs_before);
-<<<<<<< HEAD
- 
-    printf("%s\033[1EOficialmente saindo...\n", RESET);
- 
-=======
-    delete_list(&procs_after);
+
+    pthread_cancel(thread_id); // Encerra a thread de segundo plano
+    pthread_join(thread_id, NULL);
+    pthread_mutex_destroy(&table_info.mutex);
+
+    if (procs_before)
+        delete_list(&procs_before);
+    if (procs_after)
+        delete_list(&procs_after);
 
     printf("\033[2J\033[H");
     fflush(stdout);
->>>>>>> ea8c3ba0cf404f9cf2877452754e92c639e32d2d
     return 0;
 }
- 
-void print_proc_table(
-    ProcList *procs_before,
-    ProcList *procs_after,
-    unsigned long int cpu_before,
-    unsigned long int cpu_after,
-    unsigned long int memory_total,
-    int selected_index
-)
+
+void *update_table_info()
 {
-    printf(
-        "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
-        "Name", "PID", "PPID", "USER", "State",
-        "CPU", "MEM", "Active Time", "VmRSS"
-    );
- 
-    for (size_t i = 0; i < procs_after->count; i++)
+    while (1)
     {
-        Process *p = procs_after->items[i];
- 
-        char *username = get_username(p->uid);
- 
-        if (username == NULL)
-        {
-            username = "unknown";
-        }
- 
-        double cpu = 0.0;
- 
-        for (size_t j = 0; j < procs_before->count; j++)
-        {
-            Process *before = procs_before->items[j];
- 
-            if (strcmp(before->pid, p->pid) == 0)
-            {
-                cpu = calculate_cpu(
-                    before,
-                    p,
-                    cpu_before,
-                    cpu_after
-                );
- 
-                break;
-            }
-        }
- 
-        double memory = 0.0;
- 
-        if (memory_total > 0)
-        {
-            memory = calculate_memory(p, memory_total);
-        }
- 
-        const char *name = p->name ? p->name : "unknown";
-        const char *ppid = p->ppid ? p->ppid : "-";
-        const char *state = p->state ? p->state : "-";
-        const char *vmrss = p->vmrss ? p->vmrss : "0 kB";
- 
-        if (i == (size_t)selected_index)
-        {
-            printf(
-                "%s%s%-28.28s %7.7s %7.7s %-10.10s "
-                "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s%s\n",
-                BG_AMARELO,
-                TEXTO_PRETO,
-                name,
-                p->pid,
-                ppid,
-                username,
-                state,
-                cpu,
-                memory,
-                p->active_time,
-                vmrss,
-                RESET
-            );
-        }
-        else
-        {
-            printf(
-                "%-28.28s %7.7s %7.7s %-10.10s "
-                "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s\n",
-                name,
-                p->pid,
-                ppid,
-                username,
-                state,
-                cpu,
-                memory,
-                p->active_time,
-                vmrss
-            );
-        }
+        // Coleta os dados locais dinamicamente
+        ProcList *local_before = get_proc_list();
+        unsigned long int local_cpu_before = get_cpu_total();
+
+        sleep(1); // O sleep acontece APENAS nesta thread, sem travar a interface!
+
+        ProcList *local_after = get_proc_list();
+        unsigned long int local_cpu_after = get_cpu_total();
+
+        // Passa os ponteiros dinâmicos para a estrutura global com segurança
+        pthread_mutex_lock(&table_info.mutex);
+
+        // Libera a memória dinâmica das medições anteriores antes de receber as novas
+        if (table_info.procs_before)
+            delete_list(&table_info.procs_before);
+        if (table_info.procs_after)
+            delete_list(&table_info.procs_after);
+
+        table_info.procs_before = local_before;
+        table_info.procs_after = local_after;
+        table_info.cpu_before = local_cpu_before;
+        table_info.cpu_after = local_cpu_after;
+        table_info.dados_prontos = 1;
+
+        pthread_mutex_unlock(&table_info.mutex);
     }
 }
- 
-int getch_timeout(void)
+
+void update_proc_values(ProcList **procs_before, ProcList **procs_after, unsigned long int *cpu_before, unsigned long int *cpu_after)
 {
-    struct termios old_opts;
-    struct termios new_opts;
- 
-    if (tcgetattr(STDIN_FILENO, &old_opts) < 0)
+    // Verifica rapidamente se há novos dados dinâmicos disponíveis
+    pthread_mutex_lock(&table_info.mutex);
+    if (table_info.dados_prontos)
     {
-        return 0;
+        delete_list(procs_before);
+        delete_list(procs_after);
+
+        *procs_before = table_info.procs_before;
+        *procs_after = table_info.procs_after;
+        *cpu_before = table_info.cpu_before;
+        *cpu_after = table_info.cpu_after;
+
+        // Retira da estrutura global para que a Main seja dona dessas listas agora
+        table_info.procs_before = NULL;
+        table_info.procs_after = NULL;
+        table_info.dados_prontos = 0;
     }
- 
-    new_opts = old_opts;
- 
-    /* Permite ler teclas sem Enter e sem exibi-las na tela */
-    new_opts.c_lflag &= ~(ICANON | ECHO);
- 
-    /* Espera no máximo 1 segundo por uma tecla */
-    new_opts.c_cc[VMIN] = 0;
-    new_opts.c_cc[VTIME] = 10;
- 
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &new_opts) < 0)
-    {
-        return 0;
-    }
- 
-    char ch = 0;
-    ssize_t bytes_read = read(STDIN_FILENO, &ch, 1);
- 
-    /* Restaura as configurações originais do terminal */
-    tcsetattr(STDIN_FILENO, TCSANOW, &old_opts);
- 
-    if (bytes_read == 1)
-    {
-        return (unsigned char)ch;
-    }
- 
-    return 0;
+
+    pthread_mutex_unlock(&table_info.mutex);
 }

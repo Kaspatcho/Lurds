@@ -1,16 +1,18 @@
 // contem get_proc_list que le o /proc e cria a lista de processos.
 #ifndef PROC_READER_H
 #define PROC_READER_H
+#include <stddef.h>
 #include "proc_parser.h"
 
-typedef struct ProcList {
+typedef struct ProcList
+{
     size_t count;
     size_t capacity;
-    Process** items; // array de processos
+    Process **items; // array de processos
 } ProcList;
 
 // cria ProcList vazia
-ProcList* create_list();
+ProcList *create_list();
 
 // cria Process com base no PID (com create_process)
 // e adiciona essa struct na lista.
@@ -25,6 +27,6 @@ void resize(ProcList *list);
 void delete_list(ProcList **list);
 
 // le /proc e cria lista de acordo com ele.
-ProcList* get_proc_list();
+ProcList *get_proc_list();
 
 #endif
