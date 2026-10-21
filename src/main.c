@@ -12,6 +12,7 @@ void *update_table_info();
 void update_proc_values(ProcList **procs_before, ProcList **procs_after, unsigned long int *cpu_before, unsigned long int *cpu_after);
 
 TableInfo table_info;
+char search_query[64] = ""; // armazena string da pesquisa
 
 int main(void)
 {
@@ -61,7 +62,8 @@ int main(void)
             selected_index = (int)procs_after->count - 1;
         }
 
-        printf("\033[H\033[J");
+        printf("\033[2J\033[H");
+        fflush(stdout);
 
         print_proc_table(
             procs_before,
@@ -69,9 +71,10 @@ int main(void)
             cpu_before,
             cpu_after,
             memory_total,
-            selected_index);
+            selected_index,
+            search_query);
 
-        printf("\n[w] Subir | [s] Descer | [q] Sair\n");
+        printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
         printf("Atualizando automaticamente a cada segundo...\n");
         printf("Processos encontrados: %zu\n", procs_after->count);
 
@@ -82,6 +85,31 @@ int main(void)
         if (tecla == 'q' || tecla == 'Q')
         {
             running = 0;
+        }
+        else if (tecla == 'f' || tecla == 'F') //abre a busca de processos
+        {
+            printf("\033[25;1H\033[KDigite o PID ou o nome do processo para buscar: ");
+            fflush(stdout);
+            
+            int idx = 0;
+            search_query[0] = '\0'; // limpa a busca antes de começar a digitar
+
+            while (1) {
+                int c = getchar();
+                if (c == '\n' || c == '\r') {
+                    break;
+                } else if (c == 127 || c == 8) { // backspace
+                    if (idx > 0) {
+                        idx--;
+                        search_query[idx] = '\0';
+                    }
+                } else if (c >= 32 && c < 126 && idx <63) {
+                    search_query[idx++] = (char)c;
+                    search_query[idx] = '\0';
+                }
+            }
+        } else if (tecla == 'c' || tecla == 'C'){
+            search_query[0] = '\0'; // limpa a busca
         }
         else if ((tecla == 'w' || tecla == 'W') && selected_index > 0)
         {

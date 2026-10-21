@@ -26,9 +26,9 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [ ] Visualização dos detalhes do processo selecionado.
 
 ### Hannah
-- [ ] Busca de processo por PID e por nome.
-- [ ] Filtros.
-- [ ] Ordenação por uso de memória ou CPU (boa sorte).
+- [x] Busca de processo por PID e por nome.
+- [x] Filtros.
+- [x] Ordenação por uso de memória ou CPU (boa sorte).
 
 ### Lurds
 - [x] Atualização periódica da tabela.

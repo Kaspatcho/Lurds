@@ -23,7 +23,8 @@ void print_proc_table(
     unsigned long int cpu_before,
     unsigned long int cpu_after,
     unsigned long int memory_total,
-    int selected_index);
+    int selected_index,
+    char *search_query);
 
 int getch_timeout(void);
 

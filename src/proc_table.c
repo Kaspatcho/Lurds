@@ -1,5 +1,5 @@
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
@@ -14,59 +14,174 @@
 
 #define MAX_LINES 15
 
+typedef struct {
+    int index;
+    double cpu;
+} ProcessSortItem;
+
+void merge(ProcessSortItem *arr, int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    ProcessSortItem *L = malloc(sizeof(ProcessSortItem) * n1);
+    ProcessSortItem *R = malloc(sizeof(ProcessSortItem) * n2);
+    if (!L || !R) { free(L); free(R); return; }
+
+    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i].cpu >= R[j].cpu) arr[k++] = L[i++];
+        else arr[k++] = R[j++];
+    }
+    while (i < n1) arr[k++] = L[i++];
+    while (j < n2) arr[k++] = R[j++];
+
+    free(L);
+    free(R);
+}
+
+void merge_sort(ProcessSortItem *arr, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        merge_sort(arr, left, mid);
+        merge_sort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    }
+}
+
 void print_proc_table(
     ProcList *procs_before,
     ProcList *procs_after,
     unsigned long int cpu_before,
     unsigned long int cpu_after,
     unsigned long int memory_total,
-    int selected_index)
+    int selected_index,
+    char *search_query)
 {
+    if (procs_after == NULL || procs_after->count == 0)
+    {
+        printf(
+            "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
+            "Name", "PID", "PPID", "USER", "State",
+            "CPU", "MEM", "Active Time", "VmRSS");
+        printf("Nenhum processo encontrado.\n");
+        return;
+    }
+
+    ProcessSortItem *valid_items = malloc(sizeof(ProcessSortItem) * procs_after->count);
+    if (valid_items == NULL)
+    {
+        return;
+    }
+    int valid_count = 0;
+
+    for (size_t i = 0; i < procs_after->count; i++)
+    {
+        Process *p = procs_after->items[i];
+        int match = 0;
+
+        char *username = get_username(p->uid);
+        if (username == NULL) {
+            username = "unknown";
+        }
+
+        if (search_query == NULL || strlen(search_query) == 0) 
+        { 
+            match = 1; // busca vazia considera todos os processos
+        }
+        else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
+        {
+            if (p->state && (strstr(p->state, "R") != NULL || strstr(p->state, "running") != NULL)) {
+                match = 1;
+            }
+        }
+        else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
+        {
+            char *current_user = getenv("USER");
+            if (current_user && strcmp(username, current_user) == 0) {
+                match = 1;
+            }
+        }
+        else 
+        {
+            if ((p->pid && strstr(p->pid, search_query) != NULL) ||
+                (p->name && strstr(p->name, search_query) != NULL) ||
+                (strstr(username, search_query) != NULL))
+            {
+                match = 1;
+            }
+        }
+
+        if (match) 
+        {
+            // Calcula a CPU para este processo
+            double cpu = 0.0;
+            if (procs_before != NULL)
+            {
+                for (size_t j = 0; j < procs_before->count; j++)
+                {
+                    Process *before = procs_before->items[j];
+
+                    if (strcmp(before->pid, p->pid) == 0)
+                    {
+                        cpu = calculate_cpu(
+                            before,
+                            p,
+                            cpu_before,
+                            cpu_after);
+
+                        break;
+                    }
+                }
+            }
+
+            valid_items[valid_count].index = (int)i;
+            valid_items[valid_count].cpu = cpu;
+            valid_count++;
+        }
+    }
+
+    // Ordena com base na CPU em ordem decrescente
+    if (valid_count > 1) {
+        merge_sort(valid_items, 0, valid_count - 1);
+    }
+
     printf(
         "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
         "Name", "PID", "PPID", "USER", "State",
         "CPU", "MEM", "Active Time", "VmRSS");
 
-    int count = (int) procs_after->count;
-    int lines = count < MAX_LINES ? count : MAX_LINES;
+    if (valid_count == 0)
+    {
+        printf("Nenhum processo corresponde à busca \"%s\".\n", search_query);
+        free(valid_items);
+        return;
+    }
 
+    int lines = valid_count < MAX_LINES ? valid_count : MAX_LINES;
     int start = selected_index - lines / 2;
 
     if (start < 0)
         start = 0;
 
-    if (start > count - lines)
-        start = count - lines;
+    if (start > valid_count - lines)
+        start = valid_count - lines;
 
     int end = start + lines;
 
-    for (size_t i = start; i < (size_t) end; i++)
+    for (int idx = start; idx < end; idx++)
     {
-        Process *p = procs_after->items[i];
+        int real_i = valid_items[idx].index;
+        Process *p = procs_after->items[real_i];
+        double cpu = valid_items[idx].cpu;
 
         char *username = get_username(p->uid);
 
         if (username == NULL)
         {
             username = "unknown";
-        }
-
-        double cpu = 0.0;
-
-        for (size_t j = 0; j < procs_before->count; j++)
-        {
-            Process *before = procs_before->items[j];
-
-            if (strcmp(before->pid, p->pid) == 0)
-            {
-                cpu = calculate_cpu(
-                    before,
-                    p,
-                    cpu_before,
-                    cpu_after);
-
-                break;
-            }
         }
 
         double memory = 0.0;
@@ -81,7 +196,7 @@ void print_proc_table(
         const char *state = p->state ? p->state : "-";
         const char *vmrss = p->vmrss ? p->vmrss : "0 kB";
 
-        if (i == (size_t)selected_index)
+        if (idx == selected_index)
         {
             printf(
                 "%s%s%-28.28s %7.7s %7.7s %-10.10s "
@@ -115,6 +230,8 @@ void print_proc_table(
                 vmrss);
         }
     }
+
+    free(valid_items);
 }
 
 int getch_timeout(void)
