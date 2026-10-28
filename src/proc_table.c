@@ -51,6 +51,41 @@ void merge_sort(ProcessSortItem *arr, int left, int right) {
     }
 }
 
+int process_matches_filter(Process *p, const char *search_query)
+{
+    if (p == NULL)
+        return 0;
+
+    if (search_query == NULL || search_query[0] == '\0')
+        return 1;
+
+    if (strcmp(search_query, ":run") == 0)
+    {
+        return p->state &&
+            (strstr(p->state, "R") != NULL ||
+             strstr(p->state, "running") != NULL);
+    }
+
+    char *username = get_username(p->uid);
+
+    if (username == NULL)
+        username = "unknown";
+
+    if (strcmp(search_query, ":me") == 0)
+    {
+        char *current_user = getenv("USER");
+
+        return current_user &&
+            strcmp(username, current_user) == 0;
+    }
+
+    return (p->pid &&
+            strstr(p->pid, search_query) != NULL) ||
+           (p->name &&
+            strstr(p->name, search_query) != NULL) ||
+           (strstr(username, search_query) != NULL);
+}
+
 void print_proc_table(
     ProcList *procs_before,
     ProcList *procs_after,
@@ -80,39 +115,7 @@ void print_proc_table(
     for (size_t i = 0; i < procs_after->count; i++)
     {
         Process *p = procs_after->items[i];
-        int match = 0;
-
-        char *username = get_username(p->uid);
-        if (username == NULL) {
-            username = "unknown";
-        }
-
-        if (search_query == NULL || strlen(search_query) == 0) 
-        { 
-            match = 1; // busca vazia considera todos os processos
-        }
-        else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
-        {
-            if (p->state && (strstr(p->state, "R") != NULL || strstr(p->state, "running") != NULL)) {
-                match = 1;
-            }
-        }
-        else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
-        {
-            char *current_user = getenv("USER");
-            if (current_user && strcmp(username, current_user) == 0) {
-                match = 1;
-            }
-        }
-        else 
-        {
-            if ((p->pid && strstr(p->pid, search_query) != NULL) ||
-                (p->name && strstr(p->name, search_query) != NULL) ||
-                (strstr(username, search_query) != NULL))
-            {
-                match = 1;
-            }
-        }
+       int match = process_matches_filter(p, search_query);
 
         if (match) 
         {

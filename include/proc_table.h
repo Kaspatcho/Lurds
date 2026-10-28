@@ -4,7 +4,9 @@
 #define APP_PROC_TABLE_H
 #include <pthread.h>
 #include "proc_reader.h"
+#include "proc_parser.h"
 
+int process_matches_filter(Process *p, const char *search_query);
 typedef struct
 {
     ProcList *procs_before;

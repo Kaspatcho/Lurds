@@ -172,6 +172,11 @@ para mostrar uma interface ou `git commit -m "Meu titulo do commit"` para adicio
 
 **Dica:** O VSCode tem integração com o github, então tem uma aba "source control" que facilita mexer no git sem digitar comandos.
 
+## FILTROS ##
+1. :me pros do usuário 
+2. :run pra processos em running
+3. busca por nome
+
 ## Lessons Learned
 Como o carioca deu a ideia, vou adicionar aqui o que eu aprendi durante o desenvolvimento:
 1. Aprendi que eu me sinto um homem das cavernas programando em C (não tem bosta nenhuma nessa linguagem)
