@@ -147,6 +147,19 @@ enquanto testes de feature testam funcionalidades esperadas.
 Para adicionar um teste unitario, copie o teste de exemplo `./tests/unit/test_example.c` e altere conforme a necessidade,
 alterando o nome das funcoes e os asserts. Para adicionar um testes de feature, copie `./tests/feature/test_fixture.c`.
 
+## Testes adicionados
+Adicionamos testes unitários utilizando cmocka para validar o funcionamento dos filtros de busca de processos.
+Os testes verificam:
+- Busca por PID (identificador do processo).
+- Busca por nome do processo.
+- Busca por nome de usuário.
+- Busca vazia, que retorna todos os processos.
+- Filtro :run, que identifica processos em execução.
+- Filtro :me, que identifica processos do usuário atual.
+- Rejeição de buscas sem correspondências.
+- Tratamento de processos nulos.
+Os 10 testes foram executados e passaram bonitinhos com o make test!!!
+
 ## Padrão de Código
 Sinceramente eu não ligo se virar varzea, mas, caso queiram deixar bonitinho,
 eu usei o padrão `snake_case` para as funções e variáveis do programa,
