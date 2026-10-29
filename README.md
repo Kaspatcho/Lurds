@@ -21,9 +21,9 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [ ] Melhorar inferface.
 
 ### Kaik
-- [ ] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
+- [x] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).
 - [x] Interação com o usuário (usuário deve poder escolher um processo para enviar sinal).
-- [ ] Visualização dos detalhes do processo selecionado.
+- [x] Visualização dos detalhes do processo selecionado.
 
 ### Hannah
 - [x] Busca de processo por PID e por nome.
@@ -32,7 +32,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 
 ### Lurds
 - [x] Atualização periódica da tabela.
-- [ ] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
+- [x] Descobrir onde o programa explode para resolvermos no futuro (melhorar descobrirmos antes do carioca).
 
 ### Todos (em especial o lider / tiago)
 - Registrar erros e aprendizados em Lessons Learned.

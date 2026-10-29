@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <signal.h>
+#include "proc_signals.h"
 
 #include "proc_table.h"
 #include "proc_reader.h"
@@ -74,13 +76,16 @@ int main(void)
             selected_index,
             search_query);
 
-        printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
+        printf("\n[w/s] Navegar | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
+        printf("[t] Encerrar | [p] Pausar | [r] Retomar | [k] Forcar encerramento\n");
         printf("Atualizando automaticamente a cada segundo...\n");
         printf("Processos encontrados: %zu\n", procs_after->count);
 
         fflush(stdout);
 
         int tecla = getch_timeout();
+        printf("\nTecla recebida: %d ('%c')\n", tecla, tecla);
+          fflush(stdout);
 
         if (tecla == 'q' || tecla == 'Q')
         {
@@ -119,6 +124,51 @@ int main(void)
         {
             selected_index++;
         }
+        else if (tecla == 't' || tecla == 'T' ||
+         tecla == 'p' || tecla == 'P' ||
+         tecla == 'r' || tecla == 'R' ||
+         tecla == 'k' || tecla == 'K')
+{
+    if (procs_after->count == 0)
+    {
+        printf("\nNenhum processo selecionado.\n");
+        sleep(1);
+        continue;
+    }
+
+    Process *p = procs_after->items[selected_index];
+    int sinal = 0;
+
+    if (tecla == 't' || tecla == 'T')
+        sinal = SIGTERM;
+    else if (tecla == 'p' || tecla == 'P')
+        sinal = SIGSTOP;
+    else if (tecla == 'r' || tecla == 'R')
+        sinal = SIGCONT;
+    else
+    {
+        printf("\nDigite k novamente para confirmar o SIGKILL: ");
+        fflush(stdout);
+
+        int confirmacao = getch_timeout();
+
+        if (confirmacao != 'k' && confirmacao != 'K')
+        {
+            printf("\nOperacao cancelada.\n");
+            sleep(1);
+            continue;
+        }
+
+        sinal = SIGKILL;
+    }
+
+    if (send_process_signal(p->pid, sinal) == 0)
+        printf("\nSinal enviado ao processo PID %s.\n", p->pid);
+    else
+        perror("\nErro ao enviar sinal");
+
+    sleep(1);
+ }     
     }
 
     pthread_cancel(thread_id); // Encerra a thread de segundo plano
