@@ -190,6 +190,13 @@ para mostrar uma interface ou `git commit -m "Meu titulo do commit"` para adicio
 2. :run pra processos em running
 3. busca por nome
 
+## ENVIO DE SINAIS##
+
+1.SIGTERM (t): solicita o encerramento do processo.
+2.SIGSTOP (p): pausa a execução do processo.
+3.SIGCONT (r): retoma a execução de um processo pausado.
+4.SIGKILL (k): força o encerramento do processo, mediante confirmação.
+
 ## Lessons Learned
 Como o carioca deu a ideia, vou adicionar aqui o que eu aprendi durante o desenvolvimento:
 1. Aprendi que eu me sinto um homem das cavernas programando em C (não tem bosta nenhuma nessa linguagem)
