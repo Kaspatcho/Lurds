@@ -51,40 +51,59 @@ void merge_sort(ProcessSortItem *arr, int left, int right) {
     }
 }
 
-int process_matches_filter(Process *p, const char *search_query)
+
+int process_terminated(
+    ProcList *procs_before,
+    ProcList *procs_after,
+    const char *pid
+)
 {
-    if (p == NULL)
+    if (procs_before == NULL || pid == NULL)
+    {
         return 0;
-
-    if (search_query == NULL || search_query[0] == '\0')
-        return 1;
-
-    if (strcmp(search_query, ":run") == 0)
-    {
-        return p->state &&
-            (strstr(p->state, "R") != NULL ||
-             strstr(p->state, "running") != NULL);
     }
 
-    char *username = get_username(p->uid);
+    /* Verifica se o processo existia na lista anterior. */
+    int existed_before = 0;
 
-    if (username == NULL)
-        username = "unknown";
-
-    if (strcmp(search_query, ":me") == 0)
+    for (size_t i = 0; i < procs_before->count; i++)
     {
-        char *current_user = getenv("USER");
+        Process *p = procs_before->items[i];
 
-        return current_user &&
-            strcmp(username, current_user) == 0;
+        if (p != NULL && p->pid != NULL &&
+            strcmp(p->pid, pid) == 0)
+        {
+            existed_before = 1;
+            break;
+        }
     }
 
-    return (p->pid &&
-            strstr(p->pid, search_query) != NULL) ||
-           (p->name &&
-            strstr(p->name, search_query) != NULL) ||
-           (strstr(username, search_query) != NULL);
+    if (!existed_before)
+    {
+        return 0;
+    }
+
+    /* Se a lista atual ainda não existe, não confirma o término. */
+    if (procs_after == NULL)
+    {
+        return 0;
+    }
+
+    /* Se o PID não aparece na lista atual, ele desapareceu. */
+    for (size_t i = 0; i < procs_after->count; i++)
+    {
+        Process *p = procs_after->items[i];
+
+        if (p != NULL && p->pid != NULL &&
+            strcmp(p->pid, pid) == 0)
+        {
+            return 0;
+        }
+    }
+
+    return 1;
 }
+
 
 void print_proc_table(
     ProcList *procs_before,
@@ -115,7 +134,39 @@ void print_proc_table(
     for (size_t i = 0; i < procs_after->count; i++)
     {
         Process *p = procs_after->items[i];
-       int match = process_matches_filter(p, search_query);
+        int match = 0;
+
+        char *username = get_username(p->uid);
+        if (username == NULL) {
+            username = "unknown";
+        }
+
+        if (search_query == NULL || strlen(search_query) == 0) 
+        { 
+            match = 1; // busca vazia considera todos os processos
+        }
+        else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
+        {
+            if (p->state && (strstr(p->state, "R") != NULL || strstr(p->state, "running") != NULL)) {
+                match = 1;
+            }
+        }
+        else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
+        {
+            char *current_user = getenv("USER");
+            if (current_user && strcmp(username, current_user) == 0) {
+                match = 1;
+            }
+        }
+        else 
+        {
+            if ((p->pid && strstr(p->pid, search_query) != NULL) ||
+                (p->name && strstr(p->name, search_query) != NULL) ||
+                (strstr(username, search_query) != NULL))
+            {
+                match = 1;
+            }
+        }
 
         if (match) 
         {

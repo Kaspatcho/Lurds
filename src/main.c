@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <signal.h>
-#include "proc_signals.h"
 
 #include "proc_table.h"
 #include "proc_reader.h"
@@ -15,6 +13,7 @@ void update_proc_values(ProcList **procs_before, ProcList **procs_after, unsigne
 
 TableInfo table_info;
 char search_query[64] = ""; // armazena string da pesquisa
+char terminated_message[128] = "";
 
 int main(void)
 {
@@ -45,7 +44,30 @@ int main(void)
 
     while (running)
     {
+        ProcList *snapshot_anterior = procs_after;
         update_proc_values(&procs_before, &procs_after, &cpu_before, &cpu_after);
+
+        if (procs_after != snapshot_anterior &&
+    procs_before != NULL && procs_after != NULL)
+{
+    for (size_t i = 0; i < procs_before->count; i++)
+    {
+        Process *p = procs_before->items[i];
+
+        if (p != NULL && p->pid != NULL &&
+            process_terminated(procs_before, procs_after, p->pid))
+        {
+            snprintf(
+                terminated_message,
+                sizeof(terminated_message),
+                "O processo %s foi encerrado.",
+                p->pid
+            );
+
+            break;
+        }
+    }
+}
 
         if (procs_after == NULL)
         {
@@ -76,16 +98,19 @@ int main(void)
             selected_index,
             search_query);
 
-        printf("\n[w/s] Navegar | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
-        printf("[t] Encerrar | [p] Pausar | [r] Retomar | [k] Forcar encerramento\n");
+            if (terminated_message[0] != '\0')
+{
+    printf("\n[NOTIFICACAO] %s\n", terminated_message);
+    terminated_message[0] = '\0';
+}
+
+        printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
         printf("Atualizando automaticamente a cada segundo...\n");
         printf("Processos encontrados: %zu\n", procs_after->count);
 
         fflush(stdout);
 
         int tecla = getch_timeout();
-        printf("\nTecla recebida: %d ('%c')\n", tecla, tecla);
-          fflush(stdout);
 
         if (tecla == 'q' || tecla == 'Q')
         {
@@ -124,51 +149,6 @@ int main(void)
         {
             selected_index++;
         }
-        else if (tecla == 't' || tecla == 'T' ||
-         tecla == 'p' || tecla == 'P' ||
-         tecla == 'r' || tecla == 'R' ||
-         tecla == 'k' || tecla == 'K')
-{
-    if (procs_after->count == 0)
-    {
-        printf("\nNenhum processo selecionado.\n");
-        sleep(1);
-        continue;
-    }
-
-    Process *p = procs_after->items[selected_index];
-    int sinal = 0;
-
-    if (tecla == 't' || tecla == 'T')
-        sinal = SIGTERM;
-    else if (tecla == 'p' || tecla == 'P')
-        sinal = SIGSTOP;
-    else if (tecla == 'r' || tecla == 'R')
-        sinal = SIGCONT;
-    else
-    {
-        printf("\nDigite k novamente para confirmar o SIGKILL: ");
-        fflush(stdout);
-
-        int confirmacao = getch_timeout();
-
-        if (confirmacao != 'k' && confirmacao != 'K')
-        {
-            printf("\nOperacao cancelada.\n");
-            sleep(1);
-            continue;
-        }
-
-        sinal = SIGKILL;
-    }
-
-    if (send_process_signal(p->pid, sinal) == 0)
-        printf("\nSinal enviado ao processo PID %s.\n", p->pid);
-    else
-        perror("\nErro ao enviar sinal");
-
-    sleep(1);
- }     
     }
 
     pthread_cancel(thread_id); // Encerra a thread de segundo plano
