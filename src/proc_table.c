@@ -147,22 +147,42 @@ void print_proc_table(
         }
         else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
         {
-            if (p->state && (strstr(p->state, "R") != NULL || strstr(p->state, "running") != NULL)) {
+            if (p->state && (p->state[0] == 'R' || p->state[0] == 'r')) {
                 match = 1;
             }
         }
         else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
         {
             char *current_user = getenv("USER");
-            if (current_user && strcmp(username, current_user) == 0) {
+            if (current_user && current_user[0] != '\0' && strcmp(username, current_user) == 0) {
                 match = 1;
+            }
+        }
+        else if (search_query[0] == ':') // Filtro por PID no formato :número (ex: :25)
+        {
+            const char *target_pid = search_query + 1; 
+            
+            // Verifica se o que vem depois dos dois pontos é puramente numérico
+            int is_valid_num = 1;
+            for (int k = 0; target_pid[k] != '\0'; k++) {
+                if (target_pid[k] < '0' || target_pid[k] > '9') {
+                    is_valid_num = 0;
+                    break;
+                }
+            }
+
+            if (is_valid_num && target_pid[0] != '\0') {
+                if (p->pid && strcmp(p->pid, target_pid) == 0) {
+                    match = 1;
+                }
             }
         }
         else 
         {
-            if ((p->pid && strstr(p->pid, search_query) != NULL) ||
-                (p->name && strstr(p->name, search_query) != NULL) ||
-                (strstr(username, search_query) != NULL))
+            // Busca normal por nome ou usuário (se não usar os comandos com ':')
+            if ((p->name && strstr(p->name, search_query) != NULL) ||
+                (strstr(username, search_query) != NULL) ||
+                (p->pid && strstr(p->pid, search_query) != NULL))
             {
                 match = 1;
             }

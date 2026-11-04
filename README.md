@@ -188,7 +188,8 @@ para mostrar uma interface ou `git commit -m "Meu titulo do commit"` para adicio
 ## FILTROS ##
 1. :me pros do usuário 
 2. :run pra processos em running
-3. busca por nome
+3. :PID para busca por PID (ex: :25)
+4. busca por nome
 
 ## ENVIO DE SINAIS##
 
