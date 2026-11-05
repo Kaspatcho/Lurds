@@ -16,9 +16,9 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 - [x] Olhar sistemas parecidos como o htop para melhorar as informações da tabela.
 
 ### Rafer
-- [ ] Confirmação antes de encerrar.
+- [x] Confirmação antes de encerrar.
 - [ ] Destaque dos processos pertencentes ao usuário atual.
-- [ ] Melhorar inferface.
+- [x] Melhorar inferface.
 
 ### Kaik
 - [x] Envio de sinais (SIGTERM, SIGSTOP, SIGCONT e SIGKILL).

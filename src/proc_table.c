@@ -11,6 +11,8 @@
 #define BG_AMARELO "\033[43m"
 #define TEXTO_PRETO "\033[30m"
 #define RESET "\033[0m"
+#define TEXTO_CIANO "\033[1;36m"
+#define TEXTO_VERDE "\033[32m"
 
 #define MAX_LINES 15
 
@@ -116,12 +118,15 @@ void print_proc_table(
 {
     if (procs_after == NULL || procs_after->count == 0)
     {
+        printf("%s", TEXTO_CIANO);
         printf(
             "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
             "Name", "PID", "PPID", "USER", "State",
             "CPU", "MEM", "Active Time", "VmRSS");
+            printf("%s", RESET);
         printf("Nenhum processo encontrado.\n");
         return;
+       
     }
 
     ProcessSortItem *valid_items = malloc(sizeof(ProcessSortItem) * procs_after->count);
@@ -222,10 +227,12 @@ void print_proc_table(
         merge_sort(valid_items, 0, valid_count - 1);
     }
 
+    printf("%s", TEXTO_CIANO);
     printf(
         "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
         "Name", "PID", "PPID", "USER", "State",
         "CPU", "MEM", "Active Time", "VmRSS");
+    printf("%s", RESET);
 
     if (valid_count == 0)
     {
@@ -290,6 +297,8 @@ void print_proc_table(
         }
         else
         {
+            printf("%s", TEXTO_VERDE);
+            
             printf(
                 "%-28.28s %7.7s %7.7s %-10.10s "
                 "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s\n",
@@ -302,6 +311,8 @@ void print_proc_table(
                 memory,
                 p->active_time,
                 vmrss);
+
+            printf("%s", RESET);
         }
     }
 
