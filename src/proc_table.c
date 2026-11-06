@@ -158,7 +158,12 @@ void print_proc_table(
         }
         else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
         {
-            char *current_user = getenv("USER");
+            // pega o usuario a partir do uid do processo atual e nao da variavel de ambiente
+            // variavel ambiente pode estar vazia
+            char *uid = malloc(12 * sizeof(char));
+            snprintf(uid, 12, "%d", (int) getuid());
+
+            char *current_user = get_username(uid);
             if (current_user && current_user[0] != '\0' && strcmp(username, current_user) == 0) {
                 match = 1;
             }
