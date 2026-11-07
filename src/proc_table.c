@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <termios.h>
+#include <limits.h>
 
 #include "proc_table.h"
 #include "proc_reader.h"
 #include "proc_parser.h"
+#include "utils.h"
 
 #define BG_AMARELO "\033[43m"
 #define TEXTO_PRETO "\033[30m"
@@ -107,6 +110,111 @@ int process_terminated(
     return 1;
 }
 
+int process_matches_filter(const Process *process, const char *search_query)
+{
+    if (process == NULL)
+    {
+        return 0;
+    }
+
+    const char *query = search_query == NULL ? "" : search_query;
+    if (query[0] == '\0')
+    {
+        return 1;
+    }
+
+    if (strcmp(query, ":run") == 0)
+    {
+        return process->state != NULL &&
+               (process->state[0] == 'R' || process->state[0] == 'r');
+    }
+
+    if (strcmp(query, ":me") == 0)
+    {
+        if (process->uid == NULL)
+        {
+            return 0;
+        }
+
+        char current_uid[32];
+        snprintf(current_uid, sizeof(current_uid), "%lu",
+                 (unsigned long)getuid());
+        return strcmp(process->uid, current_uid) == 0;
+    }
+
+    if (query[0] == ':')
+    {
+        const char *target_pid = query + 1;
+        return process->pid != NULL && is_numeric(target_pid) &&
+               strcmp(process->pid, target_pid) == 0;
+    }
+
+    if ((process->name != NULL && strstr(process->name, query) != NULL) ||
+        (process->pid != NULL && strstr(process->pid, query) != NULL))
+    {
+        return 1;
+    }
+
+    char *username = get_username(process->uid);
+    return username != NULL && strstr(username, query) != NULL;
+}
+
+size_t get_filtered_process_count(const ProcList *processes, const char *search_query)
+{
+    if (processes == NULL)
+    {
+        return 0;
+    }
+
+    size_t count = 0;
+    for (size_t i = 0; i < processes->count; i++)
+    {
+        const Process *process = processes->items[i];
+        if (process != NULL && process->pid != NULL &&
+            process_matches_filter(process, search_query))
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+int clamp_selected_index(int selected_index, size_t item_count)
+{
+    if (selected_index < 0 || item_count == 0)
+    {
+        return 0;
+    }
+
+    if ((size_t)selected_index < item_count)
+    {
+        return selected_index;
+    }
+
+    return item_count > (size_t)INT_MAX ? INT_MAX : (int)item_count - 1;
+}
+
+int get_window_start(int selected_index, size_t item_count, int max_lines)
+{
+    if (item_count == 0 || max_lines <= 0)
+    {
+        return 0;
+    }
+
+    selected_index = clamp_selected_index(selected_index, item_count);
+    int lines = item_count < (size_t)max_lines ? (int)item_count : max_lines;
+    int start = selected_index - lines / 2;
+
+    if (start < 0)
+    {
+        return 0;
+    }
+
+    int last_start = item_count > (size_t)INT_MAX ? INT_MAX - lines : (int)item_count - lines;
+    return start > last_start ? last_start : start;
+}
+
 
 void print_proc_table(
     ProcList *procs_before,
@@ -130,7 +238,7 @@ void print_proc_table(
        
     }
 
-    uid_t current_uid = getuid();
+    int current_uid = getuid();
 
     ProcessSortItem *valid_items = malloc(sizeof(ProcessSortItem) * procs_after->count);
     if (valid_items == NULL)
@@ -148,8 +256,6 @@ void print_proc_table(
         if (username == NULL) {
             username = "unknown";
         }
-
-        int is_current_user = (p->uid == current_uid);
 
         if (search_query == NULL || strlen(search_query) == 0) 
         { 
@@ -282,6 +388,8 @@ void print_proc_table(
         const char *state = p->state ? p->state : "-";
         const char *vmrss = p->vmrss ? p->vmrss : "0 kB";
 
+        int is_current_user = (atoi(p->uid) == current_uid);
+
         if (idx == selected_index)
         {
             printf(
@@ -301,7 +409,7 @@ void print_proc_table(
                 RESET);
         }
 
-        else if (p->uid == current_uid)
+        else if (is_current_user)
 {
     printf("%s", TEXTO_AZUL);
 
