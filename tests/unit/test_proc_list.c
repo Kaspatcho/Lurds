@@ -12,9 +12,12 @@ static void test_list_is_created(void **state)
 {
     (void)state;
     ProcList *l = create_list();
+    assert_non_null(l);
     assert_int_equal(l->count, 0);
     push_process(l, "41");
     assert_int_equal(l->count, 1);
+    delete_list(&l);
+    assert_null(l);
 }
 
 // testa se o redimensionamento do vetor dinamico funciona
@@ -23,6 +26,7 @@ static void test_list_is_redized(void **state)
 {
     (void)state;
     ProcList *l = create_list();
+    assert_non_null(l);
     assert_int_equal(l->capacity, 4);
     push_process(l, "41");
     push_process(l, "41");
@@ -33,6 +37,7 @@ static void test_list_is_redized(void **state)
     assert_int_equal(l->count, 5);
     assert_int_equal(l->capacity, 6);
     assert_string_equal(l->items[0]->pid, "41");
+    delete_list(&l);
 }
 
 // testa se a lista pode ser destruida
@@ -40,6 +45,7 @@ static void test_list_is_destroyed(void **state)
 {
     (void)state;
     ProcList *l = create_list();
+    assert_non_null(l);
     push_process(l, "41");
     delete_list(&l);
     assert_null(l);

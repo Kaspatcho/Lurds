@@ -2,18 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
 #include "utils.h"
 
-char* join_path(char *basepath, char *path)
+char *join_path(const char *basepath, const char *path)
 {
-    size_t length = 40;
-    char *newpath = calloc(length, sizeof(char));
+    if (basepath == NULL || path == NULL)
+    {
+        return NULL;
+    }
+
+    size_t base_length = strlen(basepath);
+    size_t path_length = strlen(path);
+
+    if (base_length > SIZE_MAX - path_length - 2)
+    {
+        return NULL;
+    }
+
+    size_t length = base_length + path_length + 2;
+    char *newpath = malloc(length);
+    if (newpath == NULL)
+    {
+        return NULL;
+    }
+
     snprintf(newpath, length, "%s/%s", basepath, path);
 
     return newpath;
 }
 
-int startswith(const char *str, const char *prefix) {
+int startswith(const char *str, const char *prefix)
+{
+    if (str == NULL || prefix == NULL)
+    {
+        return 0;
+    }
+
     size_t len_prefix = strlen(prefix);
     size_t len_str = strlen(str);
 
@@ -24,15 +49,36 @@ int startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, len_prefix) == 0;
 }
 
-char* str_slice(char *string, size_t len)
+char *str_slice(const char *string, size_t len)
 {
-    char *n = calloc(strlen(string) - len + 1, sizeof(char));
-    strcpy(n, ((char*) string) + len);
+    if (string == NULL)
+    {
+        return NULL;
+    }
+
+    size_t string_length = strlen(string);
+    if (len > string_length)
+    {
+        return NULL;
+    }
+
+    char *n = malloc(string_length - len + 1);
+    if (n == NULL)
+    {
+        return NULL;
+    }
+
+    memcpy(n, string + len, string_length - len + 1);
     return n;
 }
 
-char* str_slice_until(char *string, size_t start, const char c)
+char *str_slice_until(const char *string, size_t start, char c)
 {
+    if (string == NULL || start > strlen(string))
+    {
+        return NULL;
+    }
+
     size_t length = 0;
  
     while (string[start + length] != '\0' &&
@@ -51,11 +97,19 @@ char* str_slice_until(char *string, size_t start, const char c)
     return n;
 }
 
-int is_numeric(char *str)
+int is_numeric(const char *str)
 {
-    int i = 0;
-    while(str[i] != '\0') {
-        if(!isdigit(str[i++])) return 0;
+    if (str == NULL || str[0] == '\0')
+    {
+        return 0;
+    }
+
+    for (size_t i = 0; str[i] != '\0'; i++)
+    {
+        if (!isdigit((unsigned char)str[i]))
+        {
+            return 0;
+        }
     }
 
     return 1;

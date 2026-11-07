@@ -35,7 +35,10 @@ typedef struct {
 
 // cria uma nova struct Process com base no PID passado.
 // funcao que deve ser usada principalmente, pois chama as demais desse modulo
-Process* create_process(char *pid);
+Process *create_process(const char *pid);
+
+// libera todos os campos de um Process e define o ponteiro como NULL.
+void delete_process(Process **process);
 
 // le o arquivo /proc/{PID}/status e atualiza o Process.
 // tem informacoes como PID, PPID, UID, state e VmRSS
@@ -57,7 +60,7 @@ int read_stat(Process *p);
 
 unsigned long int get_cpu_total(); // pega o total de ticks do sistema (/proc/stat)
 double calculate_cpu(Process *before, Process *after, unsigned long int cpu_before, unsigned long int cpu_after); // calcula a porcentagem de CPU usada entre dois momentos, com base em dois Process e dois valores de total de ticks do sistema.
-char* get_username(char *uid); // pega o nome do usuario com base no UID (usa getpwuid)
-#endif
+char *get_username(const char *uid); // pega o nome do usuario com base no UID (usa getpwuid)
 unsigned long int get_memory_total(); // pega o total de memoria do sistema (/proc/meminfo)
 double calculate_memory(Process *p, unsigned long int memory_total);   // calcula a porcentagem da memória usada no processo com base no total.
+#endif

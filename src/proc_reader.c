@@ -1,58 +1,78 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <dirent.h>
-#include <string.h>
-#include "proc_reader.h"
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "app_env.h"
+#include "proc_reader.h"
 #include "utils.h"
 
-const unsigned int INITIAL_CAPACITY = 4;
+static const size_t INITIAL_CAPACITY = 4;
 
-ProcList *create_list()
+ProcList *create_list(void)
 {
-    ProcList *list = (ProcList *)malloc(sizeof(ProcList));
+    ProcList *list = malloc(sizeof(*list));
+    if (list == NULL)
+    {
+        return NULL;
+    }
+
+    list->items = calloc(INITIAL_CAPACITY, sizeof(*list->items));
+    if (list->items == NULL)
+    {
+        free(list);
+        return NULL;
+    }
+
     list->count = 0;
     list->capacity = INITIAL_CAPACITY;
-
-    // aloca so sizeof(*Process) ao inves de alocar o Process.
-    // aparentemente sizeof(Process) seria alocacao excessiva.
-    //
-    // tambem calloc e mais lento que malloc, entao deve ser usado somente na criacao
-    // malloc deixa lixo na memoria alocada, entao deve ser usado quando for ser
-    // imediatamente preenchido.
-    list->items = calloc(list->capacity, sizeof(Process *));
-
     return list;
-}
-
-void push_process(ProcList *list, char *pid)
-{
-    if (list->count == list->capacity)
-    {
-        resize(list);
-    }
-
-    Process *p = create_process(pid);
-
-    if (p == NULL)
-    {
-        return;
-    }
-
-    list->items[list->count++] = p;
 }
 
 void resize(ProcList *list)
 {
-    int new_cap = list->capacity * 1.5f;
+    if (list == NULL || list->capacity == 0 ||
+        list->capacity > SIZE_MAX - list->capacity / 2 - 1)
+    {
+        return;
+    }
 
-    Process **new_items = malloc(sizeof(Process *) * new_cap);
-    memcpy(new_items, list->items, sizeof(Process *) * list->capacity);
+    size_t new_capacity = list->capacity + list->capacity / 2;
+    if (new_capacity == list->capacity || new_capacity > SIZE_MAX / sizeof(*list->items))
+    {
+        return;
+    }
 
-    free(list->items);
+    Process **items = realloc(list->items, new_capacity * sizeof(*items));
+    if (items == NULL)
+    {
+        return;
+    }
 
-    list->capacity = new_cap;
-    list->items = new_items;
+    list->items = items;
+    list->capacity = new_capacity;
+}
+
+void push_process(ProcList *list, const char *pid)
+{
+    if (list == NULL || list->items == NULL || !is_numeric(pid))
+    {
+        return;
+    }
+
+    if (list->count == list->capacity)
+    {
+        resize(list);
+    }
+    if (list->count == list->capacity)
+    {
+        return;
+    }
+
+    Process *process = create_process(pid);
+    if (process != NULL)
+    {
+        list->items[list->count++] = process;
+    }
 }
 
 void delete_list(ProcList **list)
@@ -64,18 +84,7 @@ void delete_list(ProcList **list)
 
     for (size_t i = 0; i < (*list)->count; i++)
     {
-        Process *p = (*list)->items[i];
-
-        if (p != NULL)
-        {
-            free(p->pid);
-            free(p->name);
-            free(p->ppid);
-            free(p->uid);
-            free(p->state);
-            free(p->vmrss);
-            free(p);
-        }
+        delete_process(&(*list)->items[i]);
     }
 
     free((*list)->items);
@@ -83,37 +92,35 @@ void delete_list(ProcList **list)
     *list = NULL;
 }
 
-// funcao privada desse modulo
-// daria pra transformar no get_proc_list, mas achei melhor separar
-ProcList *_get_proc_list(char *path)
+static ProcList *get_proc_list_from_path(const char *path)
 {
-    DIR *d = opendir(path);
-
-    if (!d)
+    DIR *directory_stream = opendir(path);
+    if (directory_stream == NULL)
     {
-        perror("Nao foi possivel abrir o diretorio");
         return NULL;
     }
 
     ProcList *directory = create_list();
-    struct dirent *dir;
-
-    while ((dir = readdir(d)) != NULL)
+    if (directory == NULL)
     {
-        // Ignora entradas que nao representam PIDs numericos
-        if (!is_numeric(dir->d_name))
-        {
-            continue;
-        }
-        push_process(directory, dir->d_name);
+        closedir(directory_stream);
+        return NULL;
     }
 
-    closedir(d);
+    struct dirent *entry;
+    while ((entry = readdir(directory_stream)) != NULL)
+    {
+        if (is_numeric(entry->d_name))
+        {
+            push_process(directory, entry->d_name);
+        }
+    }
+
+    closedir(directory_stream);
     return directory;
 }
 
-ProcList *get_proc_list()
+ProcList *get_proc_list(void)
 {
-    char *path = PROC_PATH;
-    return _get_proc_list(path);
+    return get_proc_list_from_path(PROC_PATH);
 }

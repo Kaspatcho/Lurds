@@ -26,6 +26,9 @@ void print_proc_table(
     int selected_index,
     char *search_query);
 
+// verifica se um processo atende a uma busca comum ou a um filtro iniciado por ':'.
+int process_matches_filter(const Process *process, const char *search_query);
+
 int getch_timeout(void);
 
 int process_terminated(

@@ -14,6 +14,7 @@ static void test_process_is_generated(void **state)
     (void)state;
     Process *p = create_process("41");
 
+    assert_non_null(p);
     assert_string_equal(p->name, "sleep 300");
     assert_string_equal(p->state, "S (sleeping)");
     assert_string_equal(p->ppid, "1");
@@ -21,6 +22,8 @@ static void test_process_is_generated(void **state)
     assert_string_equal(p->vmrss, "1216 kB");
     assert_int_equal(p->active_time, 220);
     assert_int_equal(p->start_time, 100821);
+    delete_process(&p);
+    assert_null(p);
 }
 
 // verifica se a struct Process e gerada corretamente
@@ -30,6 +33,7 @@ static void test_zombie_process_is_read(void **state)
     (void)state;
     Process *p = create_process("42");
 
+    assert_non_null(p);
     assert_string_equal(p->name, "sleep");
     assert_string_equal(p->state, "Z (zombie)");
     assert_string_equal(p->ppid, "1");
@@ -37,6 +41,8 @@ static void test_zombie_process_is_read(void **state)
     assert_string_equal(p->vmrss, "0 kB");
     assert_int_equal(p->active_time, 220);
     assert_int_equal(p->start_time, 100821);
+    delete_process(&p);
+    assert_null(p);
 }
 // verifica se o UID e convertido corretamente para o nome do usuario
 static void test_get_username(void **state)
@@ -85,6 +91,25 @@ static void test_calculate_cpu(void **state)
     assert_float_equal(cpu, 50.0, 0.001);
 }
 
+static void test_calculate_cpu_rejects_counter_regression(void **state)
+{
+    (void)state;
+    Process before = {.active_time = 150};
+    Process after = {.active_time = 100};
+
+    assert_float_equal(calculate_cpu(&before, &after, 1000, 1100), 0.0, 0.001);
+    assert_float_equal(calculate_cpu(&after, &before, 1100, 1000), 0.0, 0.001);
+    assert_float_equal(calculate_cpu(NULL, &after, 1000, 1100), 0.0, 0.001);
+}
+
+static void test_invalid_pid_does_not_create_a_partial_process(void **state)
+{
+    (void)state;
+
+    assert_null(create_process("not-a-pid"));
+    assert_null(create_process(NULL));
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
@@ -93,6 +118,8 @@ int main(void)
         cmocka_unit_test(test_get_username),
         cmocka_unit_test(test_get_cpu_total),
         cmocka_unit_test(test_calculate_cpu),
+        cmocka_unit_test(test_calculate_cpu_rejects_counter_regression),
+        cmocka_unit_test(test_invalid_pid_does_not_create_a_partial_process),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

@@ -7,6 +7,7 @@
 #include "proc_table.h"
 #include "proc_reader.h"
 #include "proc_parser.h"
+#include "utils.h"
 
 #define BG_AMARELO "\033[43m"
 #define TEXTO_PRETO "\033[30m"
@@ -106,6 +107,55 @@ int process_terminated(
     return 1;
 }
 
+int process_matches_filter(const Process *process, const char *search_query)
+{
+    if (process == NULL)
+    {
+        return 0;
+    }
+
+    const char *query = search_query == NULL ? "" : search_query;
+    if (query[0] == '\0')
+    {
+        return 1;
+    }
+
+    if (strcmp(query, ":run") == 0)
+    {
+        return process->state != NULL &&
+               (process->state[0] == 'R' || process->state[0] == 'r');
+    }
+
+    if (strcmp(query, ":me") == 0)
+    {
+        if (process->uid == NULL)
+        {
+            return 0;
+        }
+
+        char current_uid[32];
+        snprintf(current_uid, sizeof(current_uid), "%lu",
+                 (unsigned long)getuid());
+        return strcmp(process->uid, current_uid) == 0;
+    }
+
+    if (query[0] == ':')
+    {
+        const char *target_pid = query + 1;
+        return process->pid != NULL && is_numeric(target_pid) &&
+               strcmp(process->pid, target_pid) == 0;
+    }
+
+    if ((process->name != NULL && strstr(process->name, query) != NULL) ||
+        (process->pid != NULL && strstr(process->pid, query) != NULL))
+    {
+        return 1;
+    }
+
+    char *username = get_username(process->uid);
+    return username != NULL && strstr(username, query) != NULL;
+}
+
 
 void print_proc_table(
     ProcList *procs_before,
@@ -126,7 +176,7 @@ void print_proc_table(
             printf("%s", RESET);
         printf("Nenhum processo encontrado.\n");
         return;
-       
+
     }
 
     ProcessSortItem *valid_items = malloc(sizeof(ProcessSortItem) * procs_after->count);
@@ -135,70 +185,12 @@ void print_proc_table(
         return;
     }
     int valid_count = 0;
+    const char *query = search_query == NULL ? "" : search_query;
 
     for (size_t i = 0; i < procs_after->count; i++)
     {
         Process *p = procs_after->items[i];
-        int match = 0;
-
-        char *username = get_username(p->uid);
-        if (username == NULL) {
-            username = "unknown";
-        }
-
-        if (search_query == NULL || strlen(search_query) == 0) 
-        { 
-            match = 1; // busca vazia considera todos os processos
-        }
-        else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
-        {
-            if (p->state && (p->state[0] == 'R' || p->state[0] == 'r')) {
-                match = 1;
-            }
-        }
-        else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
-        {
-            // pega o usuario a partir do uid do processo atual e nao da variavel de ambiente
-            // variavel ambiente pode estar vazia
-            char *uid = malloc(12 * sizeof(char));
-            snprintf(uid, 12, "%d", (int) getuid());
-
-            char *current_user = get_username(uid);
-            if (current_user && current_user[0] != '\0' && strcmp(username, current_user) == 0) {
-                match = 1;
-            }
-        }
-        else if (search_query[0] == ':') // Filtro por PID no formato :número (ex: :25)
-        {
-            const char *target_pid = search_query + 1; 
-            
-            // Verifica se o que vem depois dos dois pontos é puramente numérico
-            int is_valid_num = 1;
-            for (int k = 0; target_pid[k] != '\0'; k++) {
-                if (target_pid[k] < '0' || target_pid[k] > '9') {
-                    is_valid_num = 0;
-                    break;
-                }
-            }
-
-            if (is_valid_num && target_pid[0] != '\0') {
-                if (p->pid && strcmp(p->pid, target_pid) == 0) {
-                    match = 1;
-                }
-            }
-        }
-        else 
-        {
-            // Busca normal por nome ou usuário (se não usar os comandos com ':')
-            if ((p->name && strstr(p->name, search_query) != NULL) ||
-                (strstr(username, search_query) != NULL) ||
-                (p->pid && strstr(p->pid, search_query) != NULL))
-            {
-                match = 1;
-            }
-        }
-
-        if (match) 
+        if (p != NULL && p->pid != NULL && process_matches_filter(p, query))
         {
             // Calcula a CPU para este processo
             double cpu = 0.0;
@@ -208,7 +200,8 @@ void print_proc_table(
                 {
                     Process *before = procs_before->items[j];
 
-                    if (strcmp(before->pid, p->pid) == 0)
+                    if (before != NULL && before->pid != NULL &&
+                        strcmp(before->pid, p->pid) == 0)
                     {
                         cpu = calculate_cpu(
                             before,
@@ -241,7 +234,7 @@ void print_proc_table(
 
     if (valid_count == 0)
     {
-        printf("Nenhum processo corresponde à busca \"%s\".\n", search_query);
+        printf("Nenhum processo corresponde à busca \"%s\".\n", query);
         free(valid_items);
         return;
     }
@@ -303,7 +296,7 @@ void print_proc_table(
         else
         {
             printf("%s", TEXTO_VERDE);
-            
+
             printf(
                 "%-28.28s %7.7s %7.7s %-10.10s "
                 "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s\n",

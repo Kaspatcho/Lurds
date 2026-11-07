@@ -17,7 +17,7 @@ ProcList *create_list();
 // cria Process com base no PID (com create_process)
 // e adiciona essa struct na lista.
 // se redimensiona automaticamente (chama resize)
-void push_process(ProcList *list, char *pid);
+void push_process(ProcList *list, const char *pid);
 
 // redimensiona a lista criando um novo array maior
 // e copiando os dados do antigo para o novo

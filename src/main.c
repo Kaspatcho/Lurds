@@ -120,7 +120,7 @@ int main(void)
         {
             printf("\033[25;1H\033[KDigite o PID ou o nome do processo para buscar: ");
             fflush(stdout);
-            
+
             int idx = 0;
             search_query[0] = '\0'; // limpa a busca antes de começar a digitar
 
@@ -153,6 +153,10 @@ int main(void)
 
     pthread_cancel(thread_id); // Encerra a thread de segundo plano
     pthread_join(thread_id, NULL);
+
+    /* As listas que ainda não foram transferidas para a main são da thread. */
+    delete_list(&table_info.procs_before);
+    delete_list(&table_info.procs_after);
     pthread_mutex_destroy(&table_info.mutex);
 
     if (procs_before)
