@@ -20,36 +20,52 @@
 
 #define MAX_LINES 15
 
-typedef struct {
+typedef struct
+{
     int index;
     double cpu;
 } ProcessSortItem;
 
-void merge(ProcessSortItem *arr, int left, int mid, int right) {
+void merge(ProcessSortItem *arr, int left, int mid, int right)
+{
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
     ProcessSortItem *L = malloc(sizeof(ProcessSortItem) * n1);
     ProcessSortItem *R = malloc(sizeof(ProcessSortItem) * n2);
-    if (!L || !R) { free(L); free(R); return; }
+    if (!L || !R)
+    {
+        free(L);
+        free(R);
+        return;
+    }
 
-    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
-    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
 
     int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (L[i].cpu >= R[j].cpu) arr[k++] = L[i++];
-        else arr[k++] = R[j++];
+    while (i < n1 && j < n2)
+    {
+        if (L[i].cpu >= R[j].cpu)
+            arr[k++] = L[i++];
+        else
+            arr[k++] = R[j++];
     }
-    while (i < n1) arr[k++] = L[i++];
-    while (j < n2) arr[k++] = R[j++];
+    while (i < n1)
+        arr[k++] = L[i++];
+    while (j < n2)
+        arr[k++] = R[j++];
 
     free(L);
     free(R);
 }
 
-void merge_sort(ProcessSortItem *arr, int left, int right) {
-    if (left < right) {
+void merge_sort(ProcessSortItem *arr, int left, int right)
+{
+    if (left < right)
+    {
         int mid = left + (right - left) / 2;
         merge_sort(arr, left, mid);
         merge_sort(arr, mid + 1, right);
@@ -57,12 +73,10 @@ void merge_sort(ProcessSortItem *arr, int left, int right) {
     }
 }
 
-
 int process_terminated(
     ProcList *procs_before,
     ProcList *procs_after,
-    const char *pid
-)
+    const char *pid)
 {
     if (procs_before == NULL || pid == NULL)
     {
@@ -215,7 +229,6 @@ int get_window_start(int selected_index, size_t item_count, int max_lines)
     return start > last_start ? last_start : start;
 }
 
-
 void print_proc_table(
     ProcList *procs_before,
     ProcList *procs_after,
@@ -232,10 +245,9 @@ void print_proc_table(
             "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
             "Name", "PID", "PPID", "USER", "State",
             "CPU", "MEM", "Active Time", "VmRSS");
-            printf("%s", RESET);
+        printf("%s", RESET);
         printf("Nenhum processo encontrado.\n");
         return;
-       
     }
 
     int current_uid = getuid();
@@ -253,47 +265,54 @@ void print_proc_table(
         int match = 0;
 
         char *username = get_username(p->uid);
-        if (username == NULL) {
+        if (username == NULL)
+        {
             username = "unknown";
         }
 
-        if (search_query == NULL || strlen(search_query) == 0) 
-        { 
+        if (search_query == NULL || strlen(search_query) == 0)
+        {
             match = 1; // busca vazia considera todos os processos
         }
         else if (strcmp(search_query, ":run") == 0) // filtra apenas os processos em execução
         {
-            if (p->state && (p->state[0] == 'R' || p->state[0] == 'r')) {
+            if (p->state && (p->state[0] == 'R' || p->state[0] == 'r'))
+            {
                 match = 1;
             }
         }
         else if (strcmp(search_query, ":me") == 0) // filtra apenas os processos do usuário atual
         {
             char *current_user = getenv("USER");
-            if (current_user && current_user[0] != '\0' && strcmp(username, current_user) == 0) {
+            if (current_user && current_user[0] != '\0' && strcmp(username, current_user) == 0)
+            {
                 match = 1;
             }
         }
         else if (search_query[0] == ':') // Filtro por PID no formato :número (ex: :25)
         {
-            const char *target_pid = search_query + 1; 
-            
+            const char *target_pid = search_query + 1;
+
             // Verifica se o que vem depois dos dois pontos é puramente numérico
             int is_valid_num = 1;
-            for (int k = 0; target_pid[k] != '\0'; k++) {
-                if (target_pid[k] < '0' || target_pid[k] > '9') {
+            for (int k = 0; target_pid[k] != '\0'; k++)
+            {
+                if (target_pid[k] < '0' || target_pid[k] > '9')
+                {
                     is_valid_num = 0;
                     break;
                 }
             }
 
-            if (is_valid_num && target_pid[0] != '\0') {
-                if (p->pid && strcmp(p->pid, target_pid) == 0) {
+            if (is_valid_num && target_pid[0] != '\0')
+            {
+                if (p->pid && strcmp(p->pid, target_pid) == 0)
+                {
                     match = 1;
                 }
             }
         }
-        else 
+        else
         {
             // Busca normal por nome ou usuário (se não usar os comandos com ':')
             if ((p->name && strstr(p->name, search_query) != NULL) ||
@@ -304,7 +323,7 @@ void print_proc_table(
             }
         }
 
-        if (match) 
+        if (match)
         {
             // Calcula a CPU para este processo
             double cpu = 0.0;
@@ -334,7 +353,8 @@ void print_proc_table(
     }
 
     // Ordena com base na CPU em ordem decrescente
-    if (valid_count > 1) {
+    if (valid_count > 1)
+    {
         merge_sort(valid_items, 0, valid_count - 1);
     }
 
@@ -410,25 +430,24 @@ void print_proc_table(
         }
 
         else if (is_current_user)
-{
-    printf("%s", TEXTO_AZUL);
+        {
+            printf("%s", TEXTO_AZUL);
 
-    printf(
-        "%-28.28s %7.7s %7.7s %-10.10s "
-        "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s\n",
-        name,
-        p->pid,
-        ppid,
-        username,
-        state,
-        cpu,
-        memory,
-        p->active_time,
-        vmrss
-    );
+            printf(
+                "%-28.28s %7.7s %7.7s %-10.10s "
+                "%-15.15s %7.2f%% %7.2f%% %13lu %12.12s\n",
+                name,
+                p->pid,
+                ppid,
+                username,
+                state,
+                cpu,
+                memory,
+                p->active_time,
+                vmrss);
 
-    printf("%s", RESET);
-}
+            printf("%s", RESET);
+        }
 
         else
         {
