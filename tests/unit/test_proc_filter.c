@@ -106,6 +106,57 @@ static void test_null_process_is_rejected(void **state)
     assert_false(process_matches_filter(NULL, ""));
 }
 
+static void test_filtered_count_uses_the_same_processes_as_the_table(void **state)
+{
+    (void)state;
+    Process sleeping = {
+        .name = "worker one",
+        .pid = "41",
+        .uid = "0",
+        .state = "S (sleeping)",
+    };
+    Process running = {
+        .name = "worker two",
+        .pid = "42",
+        .uid = "0",
+        .state = "R (running)",
+    };
+    Process other = {
+        .name = "database",
+        .pid = "43",
+        .uid = "0",
+        .state = "S (sleeping)",
+    };
+    Process *items[] = {&sleeping, &running, &other};
+    ProcList list = {
+        .count = 3,
+        .capacity = 3,
+        .items = items,
+    };
+
+    assert_int_equal(get_filtered_process_count(&list, ""), 3);
+    assert_int_equal(get_filtered_process_count(&list, "worker"), 2);
+    assert_int_equal(get_filtered_process_count(&list, ":run"), 1);
+    assert_int_equal(get_filtered_process_count(&list, "inexistente"), 0);
+}
+
+static void test_selection_and_window_are_relative_to_visible_items(void **state)
+{
+    (void)state;
+
+    assert_int_equal(clamp_selected_index(8, 3), 2);
+    assert_int_equal(clamp_selected_index(-1, 3), 0);
+    assert_int_equal(clamp_selected_index(2, 0), 0);
+
+    assert_int_equal(get_window_start(0, 20, 15), 0);
+    assert_int_equal(get_window_start(8, 20, 15), 1);
+    assert_int_equal(get_window_start(19, 20, 15), 5);
+
+    /* Uma busca com três itens sempre mantém o selecionado visível. */
+    assert_int_equal(get_window_start(8, 3, 15), 0);
+    assert_int_equal(get_window_start(15, 16, 15), 1);
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
@@ -117,6 +168,8 @@ int main(void)
         cmocka_unit_test(test_me_filter_rejects_a_different_uid),
         cmocka_unit_test(test_search_matches_the_resolved_username),
         cmocka_unit_test(test_null_process_is_rejected),
+        cmocka_unit_test(test_filtered_count_uses_the_same_processes_as_the_table),
+        cmocka_unit_test(test_selection_and_window_are_relative_to_visible_items),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

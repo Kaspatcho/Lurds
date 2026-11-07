@@ -29,6 +29,13 @@ void print_proc_table(
 // verifica se um processo atende a uma busca comum ou a um filtro iniciado por ':'.
 int process_matches_filter(const Process *process, const char *search_query);
 
+// conta os processos que serão mostrados depois de aplicar o filtro atual.
+size_t get_filtered_process_count(const ProcList *processes, const char *search_query);
+
+// mantém a seleção e o início da janela no espaço da lista filtrada.
+int clamp_selected_index(int selected_index, size_t item_count);
+int get_window_start(int selected_index, size_t item_count, int max_lines);
+
 int getch_timeout(void);
 
 int process_terminated(

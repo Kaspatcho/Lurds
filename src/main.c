@@ -76,15 +76,8 @@ int main(void)
             continue;
         }
 
-        /* Mantém a seleção dentro dos limites */
-        if (procs_after->count == 0)
-        {
-            selected_index = 0;
-        }
-        else if (selected_index >= (int)procs_after->count)
-        {
-            selected_index = (int)procs_after->count - 1;
-        }
+        size_t filtered_count = get_filtered_process_count(procs_after, search_query);
+        selected_index = clamp_selected_index(selected_index, filtered_count);
 
         printf("\033[2J\033[H");
         fflush(stdout);
@@ -106,7 +99,7 @@ int main(void)
 
         printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
         printf("Atualizando automaticamente a cada segundo...\n");
-        printf("Processos encontrados: %zu\n", procs_after->count);
+        printf("Processos encontrados: %zu\n", filtered_count);
 
         fflush(stdout);
 
@@ -138,14 +131,17 @@ int main(void)
                     search_query[idx] = '\0';
                 }
             }
+            selected_index = 0;
         } else if (tecla == 'c' || tecla == 'C'){
             search_query[0] = '\0'; // limpa a busca
+            selected_index = 0;
         }
         else if ((tecla == 'w' || tecla == 'W') && selected_index > 0)
         {
             selected_index--;
         }
-        else if ((tecla == 's' || tecla == 'S') && selected_index + 1 < (int)procs_after->count)
+        else if ((tecla == 's' || tecla == 'S') &&
+                 (size_t)(selected_index + 1) < filtered_count)
         {
             selected_index++;
         }

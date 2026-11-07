@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <unistd.h>
 #include <termios.h>
 
@@ -156,6 +157,63 @@ int process_matches_filter(const Process *process, const char *search_query)
     return username != NULL && strstr(username, query) != NULL;
 }
 
+size_t get_filtered_process_count(const ProcList *processes, const char *search_query)
+{
+    if (processes == NULL)
+    {
+        return 0;
+    }
+
+    size_t count = 0;
+    for (size_t i = 0; i < processes->count; i++)
+    {
+        const Process *process = processes->items[i];
+        if (process != NULL && process->pid != NULL &&
+            process_matches_filter(process, search_query))
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+int clamp_selected_index(int selected_index, size_t item_count)
+{
+    if (selected_index < 0 || item_count == 0)
+    {
+        return 0;
+    }
+
+    if ((size_t)selected_index < item_count)
+    {
+        return selected_index;
+    }
+
+    return item_count > (size_t)INT_MAX ? INT_MAX : (int)item_count - 1;
+}
+
+int get_window_start(int selected_index, size_t item_count, int max_lines)
+{
+    if (item_count == 0 || max_lines <= 0)
+    {
+        return 0;
+    }
+
+    selected_index = clamp_selected_index(selected_index, item_count);
+    int lines = item_count < (size_t)max_lines ? (int)item_count : max_lines;
+    int start = selected_index - lines / 2;
+
+    if (start < 0)
+    {
+        return 0;
+    }
+
+    int last_start = item_count > (size_t)INT_MAX ? INT_MAX - lines :
+                     (int)item_count - lines;
+    return start > last_start ? last_start : start;
+}
+
 
 void print_proc_table(
     ProcList *procs_before,
@@ -239,14 +297,9 @@ void print_proc_table(
         return;
     }
 
+    selected_index = clamp_selected_index(selected_index, (size_t)valid_count);
     int lines = valid_count < MAX_LINES ? valid_count : MAX_LINES;
-    int start = selected_index - lines / 2;
-
-    if (start < 0)
-        start = 0;
-
-    if (start > valid_count - lines)
-        start = valid_count - lines;
+    int start = get_window_start(selected_index, (size_t)valid_count, MAX_LINES);
 
     int end = start + lines;
 
