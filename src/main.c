@@ -48,26 +48,25 @@ int main(void)
         update_proc_values(&procs_before, &procs_after, &cpu_before, &cpu_after);
 
         if (procs_after != snapshot_anterior &&
-    procs_before != NULL && procs_after != NULL)
-{
-    for (size_t i = 0; i < procs_before->count; i++)
-    {
-        Process *p = procs_before->items[i];
-
-        if (p != NULL && p->pid != NULL &&
-            process_terminated(procs_before, procs_after, p->pid))
+            procs_before != NULL && procs_after != NULL)
         {
-            snprintf(
-                terminated_message,
-                sizeof(terminated_message),
-                "O processo %s foi encerrado.",
-                p->pid
-            );
+            for (size_t i = 0; i < procs_before->count; i++)
+            {
+                Process *p = procs_before->items[i];
 
-            break;
+                if (p != NULL && p->pid != NULL &&
+                    process_terminated(procs_before, procs_after, p->pid))
+                {
+                    snprintf(
+                        terminated_message,
+                        sizeof(terminated_message),
+                        "O processo %s foi encerrado.",
+                        p->pid);
+
+                    break;
+                }
+            }
         }
-    }
-}
 
         if (procs_after == NULL)
         {
@@ -91,11 +90,11 @@ int main(void)
             selected_index,
             search_query);
 
-            if (terminated_message[0] != '\0')
-{
-    printf("\n[NOTIFICACAO] %s\n", terminated_message);
-    terminated_message[0] = '\0';
-}
+        if (terminated_message[0] != '\0')
+        {
+            printf("\n[NOTIFICACAO] %s\n", terminated_message);
+            terminated_message[0] = '\0';
+        }
 
         printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
         printf("Atualizando automaticamente a cada segundo...\n");
@@ -109,7 +108,7 @@ int main(void)
         {
             running = 0;
         }
-        else if (tecla == 'f' || tecla == 'F') //abre a busca de processos
+        else if (tecla == 'f' || tecla == 'F') // abre a busca de processos
         {
             printf("\033[25;1H\033[KDigite o PID ou o nome do processo para buscar: ");
             fflush(stdout);
@@ -117,22 +116,31 @@ int main(void)
             int idx = 0;
             search_query[0] = '\0'; // limpa a busca antes de começar a digitar
 
-            while (1) {
+            while (1)
+            {
                 int c = getchar();
-                if (c == '\n' || c == '\r') {
+                if (c == '\n' || c == '\r')
+                {
                     break;
-                } else if (c == 127 || c == 8) { // backspace
-                    if (idx > 0) {
+                }
+                else if (c == 127 || c == 8)
+                { // backspace
+                    if (idx > 0)
+                    {
                         idx--;
                         search_query[idx] = '\0';
                     }
-                } else if (c >= 32 && c < 126 && idx <63) {
+                }
+                else if (c >= 32 && c < 126 && idx < 63)
+                {
                     search_query[idx++] = (char)c;
                     search_query[idx] = '\0';
                 }
             }
             selected_index = 0;
-        } else if (tecla == 'c' || tecla == 'C'){
+        }
+        else if (tecla == 'c' || tecla == 'C')
+        {
             search_query[0] = '\0'; // limpa a busca
             selected_index = 0;
         }

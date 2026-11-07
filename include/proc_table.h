@@ -41,7 +41,6 @@ int getch_timeout(void);
 int process_terminated(
     ProcList *procs_before,
     ProcList *procs_after,
-    const char *pid
-);
+    const char *pid);
 
 #endif

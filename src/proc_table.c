@@ -18,36 +18,52 @@
 
 #define MAX_LINES 15
 
-typedef struct {
+typedef struct
+{
     int index;
     double cpu;
 } ProcessSortItem;
 
-void merge(ProcessSortItem *arr, int left, int mid, int right) {
+void merge(ProcessSortItem *arr, int left, int mid, int right)
+{
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
     ProcessSortItem *L = malloc(sizeof(ProcessSortItem) * n1);
     ProcessSortItem *R = malloc(sizeof(ProcessSortItem) * n2);
-    if (!L || !R) { free(L); free(R); return; }
+    if (!L || !R)
+    {
+        free(L);
+        free(R);
+        return;
+    }
 
-    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
-    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
 
     int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (L[i].cpu >= R[j].cpu) arr[k++] = L[i++];
-        else arr[k++] = R[j++];
+    while (i < n1 && j < n2)
+    {
+        if (L[i].cpu >= R[j].cpu)
+            arr[k++] = L[i++];
+        else
+            arr[k++] = R[j++];
     }
-    while (i < n1) arr[k++] = L[i++];
-    while (j < n2) arr[k++] = R[j++];
+    while (i < n1)
+        arr[k++] = L[i++];
+    while (j < n2)
+        arr[k++] = R[j++];
 
     free(L);
     free(R);
 }
 
-void merge_sort(ProcessSortItem *arr, int left, int right) {
-    if (left < right) {
+void merge_sort(ProcessSortItem *arr, int left, int right)
+{
+    if (left < right)
+    {
         int mid = left + (right - left) / 2;
         merge_sort(arr, left, mid);
         merge_sort(arr, mid + 1, right);
@@ -55,12 +71,10 @@ void merge_sort(ProcessSortItem *arr, int left, int right) {
     }
 }
 
-
 int process_terminated(
     ProcList *procs_before,
     ProcList *procs_after,
-    const char *pid
-)
+    const char *pid)
 {
     if (procs_before == NULL || pid == NULL)
     {
@@ -209,11 +223,9 @@ int get_window_start(int selected_index, size_t item_count, int max_lines)
         return 0;
     }
 
-    int last_start = item_count > (size_t)INT_MAX ? INT_MAX - lines :
-                     (int)item_count - lines;
+    int last_start = item_count > (size_t)INT_MAX ? INT_MAX - lines : (int)item_count - lines;
     return start > last_start ? last_start : start;
 }
-
 
 void print_proc_table(
     ProcList *procs_before,
@@ -231,10 +243,9 @@ void print_proc_table(
             "%-28s %7s %7s %-10s %-15s %8s %8s %13s %12s\n",
             "Name", "PID", "PPID", "USER", "State",
             "CPU", "MEM", "Active Time", "VmRSS");
-            printf("%s", RESET);
+        printf("%s", RESET);
         printf("Nenhum processo encontrado.\n");
         return;
-
     }
 
     ProcessSortItem *valid_items = malloc(sizeof(ProcessSortItem) * procs_after->count);
@@ -279,7 +290,8 @@ void print_proc_table(
     }
 
     // Ordena com base na CPU em ordem decrescente
-    if (valid_count > 1) {
+    if (valid_count > 1)
+    {
         merge_sort(valid_items, 0, valid_count - 1);
     }
 

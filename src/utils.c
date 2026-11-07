@@ -42,7 +42,8 @@ int startswith(const char *str, const char *prefix)
     size_t len_prefix = strlen(prefix);
     size_t len_str = strlen(str);
 
-    if (len_prefix > len_str) {
+    if (len_prefix > len_str)
+    {
         return 0;
     }
 
@@ -80,20 +81,22 @@ char *str_slice_until(const char *string, size_t start, char c)
     }
 
     size_t length = 0;
- 
+
     while (string[start + length] != '\0' &&
-           string[start + length] != c) {
+           string[start + length] != c)
+    {
         length++;
     }
- 
+
     char *n = calloc(length + 1, sizeof(char));
-    if (n == NULL) {
+    if (n == NULL)
+    {
         return NULL;
     }
- 
+
     strncpy(n, string + start, length);
     n[length] = '\0';
- 
+
     return n;
 }
 
