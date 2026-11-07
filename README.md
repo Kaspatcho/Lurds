@@ -17,7 +17,7 @@ Ele será parecido com [htop](https://blog.ironlinux.com.br/o-comando-htop-no-li
 
 ### Rafer
 - [x] Confirmação antes de encerrar.
-- [ ] Destaque dos processos pertencentes ao usuário atual.
+- [x] Destaque dos processos pertencentes ao usuário atual.
 - [x] Melhorar inferface.
 
 ### Kaik
