@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
-#include <signal.h>
 
 #include "proc_table.h"
 #include "proc_reader.h"
@@ -93,14 +92,14 @@ int main(void)
             selected_index,
             search_query);
 
-       if (terminated_message[0] != '\0')
+        if (terminated_message[0] != '\0')
         {
             printf("\n[NOTIFICACAO] %s\n", terminated_message);
             terminated_message[0] = '\0';
         }
 
         printf("\n[w] Subir | [s] Descer | [f] Buscar | [c] Limpar Busca | [q] Sair\n");
-        printf("[t] Terminar (SIGTERM) | [p] Parar (SIGSTOP) | [r] Continuar (SIGCONT) | [k] Matar (SIGKILL)\n");
+        printf("[t] Terminar | [p] Parar | [r] Continuar | [k] Matar\n");
         printf("Atualizando automaticamente a cada segundo...\n");
         printf("Processos encontrados: %zu\n", filtered_count);
 
@@ -158,62 +157,89 @@ int main(void)
             selected_index++;
         }
         else if (tecla == 't' || tecla == 'T' || 
-         tecla == 'p' || tecla == 'P' || 
-         tecla == 'r' || tecla == 'R' || 
-         tecla == 'k' || tecla == 'K')
-{
-    if (procs_after->count == 0)
-    {
-        printf("\nNenhum processo selecionado.\n");
-        sleep(1);
-        continue;
-    }
-
-    Process *p = procs_after->items[selected_index];
-    int sinal = 0;
-
-    if (tecla == 't' || tecla == 'T')
-        sinal = SIGTERM;
-    else if (tecla == 'p' || tecla == 'P')
-        sinal = SIGSTOP;
-    else if (tecla == 'r' || tecla == 'R')
-        sinal = SIGCONT;
-    else
-    {
-        printf("\nDigite k novamente para confirmar o SIGKILL: ");
-        fflush(stdout);
-
-        int confirmacao = getch_timeout();
-        if (confirmacao != 'k' && confirmacao != 'K')
+                 tecla == 'p' || tecla == 'P' || 
+                 tecla == 'r' || tecla == 'R' || 
+                 tecla == 'k' || tecla == 'K')
         {
-            printf("\nOperacao cancelada.\n");
+            if (procs_after->count == 0)
+            {
+                printf("\nNenhum processo selecionado.\n");
+                sleep(1);
+                continue;
+            }
+
+            // Encontra exatamente o processo visível na linha selecionada (respeitando o filtro)
+            Process *p = NULL;
+            size_t current_filtered_index = 0;
+            int found = 0;
+
+            for (size_t i = 0; i < procs_after->count; i++)
+            {
+                Process *candidate = procs_after->items[i];
+                if (process_matches_filter(candidate, search_query))
+                {
+                    if ((int)current_filtered_index == selected_index)
+                    {
+                        p = candidate;
+                        found = 1;
+                        break;
+                    }
+                    current_filtered_index++;
+                }
+            }
+
+            if (!found || p == NULL || p->pid == NULL)
+            {
+                printf("\nErro: Processo selecionado nao encontrado.\n");
+                sleep(1);
+                continue;
+            }
+
+            int sinal = 0;
+
+            if (tecla == 't' || tecla == 'T')
+                sinal = SIGTERM;
+            else if (tecla == 'p' || tecla == 'P')
+                sinal = SIGSTOP;
+            else if (tecla == 'r' || tecla == 'R')
+                sinal = SIGCONT;
+            else
+            {
+                printf("\nDigite k novamente para confirmar o SIGKILL para o PID %s (%s): ", p->pid, p->name ? p->name : "desconhecido");
+                fflush(stdout);
+
+                int confirmacao = getch_timeout();
+                if (confirmacao != 'k' && confirmacao != 'K')
+                {
+                    printf("\nOperacao cancelada.\n");
+                    sleep(1);
+                    continue;
+                }
+
+                sinal = SIGKILL;
+            }
+
+            pid_t target_pid = (pid_t)atoi(p->pid);
+
+            // Trava de segurança para não matar o próprio programa ou o make run pai
+            if (target_pid == getpid() || target_pid == getppid())
+            {
+                printf("\nErro de seguranca: Nao e permitido encerrar o proprio gerenciador ou o terminal pai!\n");
+                sleep(2);
+                continue;
+            }
+
+            // Envia o sinal para o PID correto do processo alvo
+            if (kill(target_pid, sinal) == 0)
+            {
+                printf("\nSinal enviado com sucesso para o processo %s (PID %s).\n", p->name ? p->name : "", p->pid);
+            }
+            else
+            {
+                perror("\nErro ao enviar sinal");
+            }
             sleep(1);
-            continue;
         }
-
-        sinal = SIGKILL;
-    }
-
-    if (p != NULL && p->pid != NULL)
-    {
-        pid_t target_pid = (pid_t)atoi(p->pid);
-        if (kill(target_pid, sinal) == 0)
-        {
-            printf("\nSinal enviado com sucesso para o PID %s.\n", p->pid);
-        }
-        else
-        {
-            perror("\nErro ao enviar sinal");
-        }
-        sleep(1);
-    }
-}
-        else if (tecla == 't' || tecla == 'T' || 
-         tecla == 'p' || tecla == 'P' || 
-         tecla == 'r' || tecla == 'R' || 
-         tecla == 'k' || tecla == 'K')
-{
-}
     }
 
     pthread_cancel(thread_id); // Encerra a thread de segundo plano
